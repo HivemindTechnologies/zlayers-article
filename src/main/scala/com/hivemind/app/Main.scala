@@ -1,6 +1,6 @@
 package com.hivemind.app
 
-import com.hivemind.logging.{Logger, HivemindLogLevel}
+import com.hivemind.app.logging.{HivemindLogLevel, Logger}
 import zio.*
 
 import java.io.IOException
