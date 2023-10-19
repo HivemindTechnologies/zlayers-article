@@ -80,9 +80,9 @@ object DatabaseImpl {
 
   val usersById: DatabaseTable =
     HashMap(
-      1 -> UserRecord(id = 1, name = "John", surname = "Baker", age = 33),
-      2 -> UserRecord(id = 2, name = "Mary", surname = "Green", age = 31),
-      3 -> UserRecord(id = 3, name = "Andrew", surname = "Adams", age = 46),
+      1 -> UserRecord(id = 1, name = "Alonzo", surname = "Church", age = 33),
+      2 -> UserRecord(id = 2, name = "Alan", surname = "Turing", age = 31),
+      3 -> UserRecord(id = 3, name = "Haskell", surname = "Curry", age = 46),
     )
 
   val propertiesById: DatabaseTable =
