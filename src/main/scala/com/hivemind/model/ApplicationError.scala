@@ -3,5 +3,5 @@ package com.hivemind.model
 import zio.UIO
 
 trait ApplicationError {
-  def logError: UIO[String]
+  def logError(): UIO[String]
 }

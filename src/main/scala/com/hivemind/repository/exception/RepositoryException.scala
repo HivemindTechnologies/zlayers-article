@@ -4,7 +4,7 @@ import com.hivemind.model.ApplicationError
 import zio.{Console, UIO}
 
 sealed trait RepositoryException extends ApplicationError {
-  override def logError: UIO[String] =
+  override def logError(): UIO[String] =
     this match {
       case RepositoryConnectionError =>
         val message = s"A connection exception occurred in the repository."

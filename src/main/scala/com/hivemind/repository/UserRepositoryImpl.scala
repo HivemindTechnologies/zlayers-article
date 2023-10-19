@@ -1,7 +1,7 @@
 package com.hivemind.repository
 
 import com.hivemind.database.Database
-import com.hivemind.database.exception.{DatabaseConnectionClosedException, DatabaseConnectionException, DatabaseTimeoutException}
+import com.hivemind.database.exception.{DatabaseConnectionClosedException, DatabaseQueryExecutionException, DatabaseTimeoutException}
 import com.hivemind.database.model.{Record, TableName, UserRecord}
 import com.hivemind.model.User
 import com.hivemind.repository.exception.{RepositoryConnectionError, RepositoryException}
@@ -11,11 +11,11 @@ class UserRepositoryImpl(database: Database) extends UserRepository {
   override def getUserById(id: Int): IO[RepositoryException, Option[User]] =
     for {
       maybeRecord <- database.getObjectById(id, TableName.Users).mapError {
-                       case DatabaseTimeoutException    =>
+                       case DatabaseTimeoutException(logger)          =>
                          RepositoryConnectionError
-                       case DatabaseConnectionException =>
+                       case DatabaseQueryExecutionException(logger)   =>
                          RepositoryConnectionError
-                       case DatabaseConnectionClosedException   =>
+                       case DatabaseConnectionClosedException(logger) =>
                          RepositoryConnectionError
                      }
       maybeUser   <- ZIO.succeed(maybeRecord.flatMap(buildUserFromRecord))
