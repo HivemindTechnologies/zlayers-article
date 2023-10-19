@@ -48,12 +48,13 @@ class DatabaseImpl(parameters: DatabaseParameters) extends Database {
     }
 
   override def simulateQuery(table: TableName): IO[DatabaseException, List[Record]] = {
-    val records: List[Record] = generateRandomListOfResults(table)
-
     val connection = DatabaseConnection(isAlive = Random.nextBoolean)
     for {
-      _ <- checkConnectionAlive(connection)
-      _ <- simulateExecutionTime(parameters.maxSecondsForQuery)
+      _       <- checkConnectionAlive(connection)
+      _       <- simulateExecutionTime(parameters.maxSecondsForQuery)
+      records <- ZIO
+                   .attempt(generateRandomListOfResults(table))
+                   .mapError((_: Throwable) => DatabaseConnectionException)
     } yield records
   }
 
