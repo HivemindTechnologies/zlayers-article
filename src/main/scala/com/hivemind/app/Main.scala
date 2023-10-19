@@ -1,21 +1,21 @@
 package com.hivemind.app
 
-import com.hivemind.logging.{Logging, MyLogLevel}
+import com.hivemind.logging.{Logger, HivemindLogLevel}
 import zio.*
 
 import java.io.IOException
 
 object Main extends ZIOAppDefault {
 
-  private val myAppLogic: ZIO[Logging, IOException, Unit] =
+  private val myAppLogic: ZIO[Logger, IOException, Unit] =
     for {
-      logging <- ZIO.service[Logging]
-      _       <- logging.log("Starting application ...", MyLogLevel.INFO)
+      logging <- ZIO.service[Logger]
+      _       <- logging.log("Starting application ...", HivemindLogLevel.INFO)
     } yield ()
 
   def run: ZIO[Any, IOException, Unit] =
     myAppLogic.provide(
-      Logging.live,
+      Logger.live,
       ZLayer.succeed(Console.ConsoleLive),
 //      ZLayer.Debug.mermaid // (uncomment to show a dependency graph in a diagram)
 //      ZLayer.Debug.tree // (uncomment to show a dependency graph in console)

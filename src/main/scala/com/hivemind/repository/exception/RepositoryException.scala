@@ -1,9 +1,17 @@
 package com.hivemind.repository.exception
 
-import java.util.UUID
+import com.hivemind.model.ApplicationError
+import zio.{Console, UIO}
 
-sealed trait RepositoryException(message: String)
+sealed trait RepositoryException(message: String) extends ApplicationError {
+  override def logError: UIO[String] =
+    this match {
+      case RepositoryConnectionError(error) =>
+        val message = s"A connection exception occurred in the repository: $error"
+        for {
+          _ <- Console.printLine(message).ignore
+        } yield message
+    }
+}
 
-case class UserNotFound(userId: UUID)         extends RepositoryException(s"User not found: ${userId.toString}")
-case class PropertyNotFound(propertyId: UUID) extends RepositoryException(s"Property not found: ${propertyId.toString}")
-case class ConnectionError(message: String)   extends RepositoryException(message)
+case class RepositoryConnectionError(message: String) extends RepositoryException(message)

@@ -1,10 +1,17 @@
 package com.hivemind.service.exception
 
-import java.util.UUID
+import com.hivemind.model.ApplicationError
+import zio.{Console, UIO}
 
-sealed trait ServiceException(message: String)
+sealed trait ServiceException extends ApplicationError {
+  override def logError: UIO[String] =
+    this match {
+      case ServiceConnectionError(error) =>
+        val message = s"A connection exception occurred in the service layer: $error"
+        for {
+          _ <- Console.printLine(message).ignore
+        } yield message
+    }
+}
 
-case class UserNotFound(userId: UUID)         extends ServiceException(s"User not found: ${userId.toString}")
-case class PropertyNotFound(propertyId: UUID) extends ServiceException(s"Property not found: ${propertyId.toString}")
-case class ConnectionError(message: String)   extends ServiceException(message)
-case class UnknownError(message: String)      extends ServiceException(message)
+case class ServiceConnectionError(message: String) extends ServiceException

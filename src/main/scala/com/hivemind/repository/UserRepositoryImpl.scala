@@ -1,12 +1,12 @@
 package com.hivemind.repository
 
 import com.hivemind.database.Database
-import com.hivemind.model.User
+import com.hivemind.database.exception.{DatabaseConnectionError, DatabaseException, DatabaseTimeoutException}
 import com.hivemind.database.model.{Record, TableName, UserRecord}
-import com.hivemind.repository.exception.{ConnectionError, RepositoryException}
-import zio.IO
-import zio.ZIO
-import com.hivemind.database.exception.{ConnectionException, DatabaseException, TimeoutException}
+import com.hivemind.model.User
+import com.hivemind.repository.exception.{RepositoryConnectionError, RepositoryException}
+import zio.{IO, ZIO}
+
 import java.util.UUID
 
 class UserRepositoryImpl(database: Database) extends UserRepository {
@@ -17,10 +17,10 @@ class UserRepositoryImpl(database: Database) extends UserRepository {
     } yield maybeUser
 
   private def mapDatabaseToRepositoryError(error: DatabaseException): RepositoryException = error match {
-    case TimeoutException    =>
-      ConnectionError("Timeout waiting for database")
-    case ConnectionException =>
-      ConnectionError("Database connection exception")
+    case DatabaseTimeoutException =>
+      RepositoryConnectionError("Timeout waiting for database")
+    case DatabaseConnectionError  =>
+      RepositoryConnectionError("Database connection exception")
   }
 
   private def createUser(record: Record): Option[User] = record match {
