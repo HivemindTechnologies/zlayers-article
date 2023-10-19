@@ -6,5 +6,5 @@ import zio.IO
 
 trait Database {
   def getObjectById(id: Int, table: TableName): IO[DatabaseException, Option[Record]]
-  def executeQuery(query: String): IO[DatabaseException, List[Record]]
+  def simulateQuery(table: TableName): IO[DatabaseException, List[Record]]
 }

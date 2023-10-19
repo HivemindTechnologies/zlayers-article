@@ -8,6 +8,9 @@ import scala.collection.immutable.HashMap
 import scala.util.Random
 
 class DatabaseImpl(parameters: DatabaseParameters) extends Database {
+
+  private val maxQueryDuration: Int = 10
+
   override def getObjectById(id: Int, table: TableName): IO[DatabaseException, Option[Record]] = {
 
     val connection = DatabaseConnection(isAlive = Random.nextBoolean)
@@ -26,6 +29,16 @@ class DatabaseImpl(parameters: DatabaseParameters) extends Database {
     then ZIO.unit
     else ZIO.fail(DatabaseConnectionClosedException)
 
+  private def simulateExecutionTime(timeout: Int): IO[DatabaseException, Unit] =
+    for {
+      maybeUnit <- ZIO
+                     .sleep((Random.nextInt(maxQueryDuration) + 1).seconds)
+                     .timeout(timeout.seconds)
+      outcome   <- if maybeUnit.isDefined
+                   then ZIO.unit
+                   else ZIO.fail(DatabaseTimeoutException)
+    } yield outcome
+
   private def getRecordById(id: Int, table: TableName): Option[Record] =
     table match {
       case TableName.Users      =>
@@ -34,17 +47,30 @@ class DatabaseImpl(parameters: DatabaseParameters) extends Database {
         propertiesById.get(id)
     }
 
-  private def simulateExecutionTime(timeout: Int): IO[DatabaseException, Unit] =
-    for {
-      maybeUnit <- ZIO
-                     .sleep(Random.nextInt(11).seconds)
-                     .timeout(timeout.seconds)
-      outcome   <- if maybeUnit.isDefined
-                   then ZIO.unit
-                   else ZIO.fail(DatabaseTimeoutException)
-    } yield outcome
+  override def simulateQuery(table: TableName): IO[DatabaseException, List[Record]] = {
+    val records: List[Record] = generateRandomListOfResults(table)
 
-  override def executeQuery(query: String): IO[DatabaseException, List[Record]] = ???
+    val connection = DatabaseConnection(isAlive = Random.nextBoolean)
+    for {
+      _ <- checkConnectionAlive(connection)
+      _ <- simulateExecutionTime(parameters.maxSecondsForQuery)
+    } yield records
+  }
+
+  private def generateRandomListOfResults(table: TableName): List[Record] = {
+    val maxRecordsToReturn: Int = 7
+    val maxIdInclusive: Int     = 7
+
+    val recordsToReturn: Int = Random.nextInt(maxRecordsToReturn) + 1
+
+    val results: Set[Record] = (1 to recordsToReturn).toSet.flatMap { _ =>
+
+      val randomId = Random.nextInt(maxIdInclusive) + 1
+      getRecordById(randomId, table).toSet
+    }
+
+    results.toList
+  }
 }
 
 object DatabaseImpl {
