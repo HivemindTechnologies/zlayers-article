@@ -5,18 +5,24 @@ import zio.{Console, UIO}
 sealed trait DatabaseException extends ApplicationError {
   override def logError: UIO[String] =
     this match {
-      case DatabaseTimeoutException =>
+      case DatabaseTimeoutException          =>
         val message = "A timeout occurred in the database"
         for {
           _ <- Console.printLine(message).ignore
         } yield message
-      case DatabaseConnectionError  =>
-        val message = "A connection exception occurred in the database"
+      case DatabaseConnectionException       =>
+        val message = "A connection exception occurred in the database."
+        for {
+          _ <- Console.printLine(message).ignore
+        } yield message
+      case DatabaseConnectionClosedException =>
+        val message = "The connection close unexpectedly while querying the database."
         for {
           _ <- Console.printLine(message).ignore
         } yield message
     }
 }
 
-case object DatabaseTimeoutException extends DatabaseException
-case object DatabaseConnectionError  extends DatabaseException
+case object DatabaseTimeoutException          extends DatabaseException
+case object DatabaseConnectionException       extends DatabaseException
+case object DatabaseConnectionClosedException extends DatabaseException
