@@ -8,7 +8,7 @@ import zio.{IO, ZIO, ZLayer}
 
 trait Database {
   def getObjectById(id: Int, table: TableName): IO[DatabaseException, Option[Record]]
-  def simulateQuery(table: TableName): IO[DatabaseException, List[Record]]
+  def executeQuery(table: TableName): IO[DatabaseException, List[Record]]
 }
 
 object Database {

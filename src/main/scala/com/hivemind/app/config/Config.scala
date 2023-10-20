@@ -10,5 +10,5 @@ object Config {
       Config(databaseParameters = myDBParams),
     )
   private val myDBParams: DatabaseParameters =
-    DatabaseParameters(databaseName = "myMemoryDB", databasePassword = "password", maxConnections = 5, queryTimeoutSeconds = 5)
+    DatabaseParameters(databaseName = "myMemoryDB", databasePassword = "password", maxConnections = 5, probabilityOfError = 10.0)
 }

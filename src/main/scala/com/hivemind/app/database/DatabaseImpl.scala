@@ -13,51 +13,47 @@ import scala.util.Random.nextInt as scalaNextInt
 
 class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Database {
 
-  private val maxQueryDuration: Int      = 10
   private val probabilityOfError: Double = parameters.probabilityOfError
 
   override def getObjectById(id: Int, table: TableName): IO[DatabaseException, Option[Record]] = {
-
     val result: IO[DatabaseException, Option[Record]] = for {
       connectionClosedError <- isErrorUsingProvidedProbability
       connection             = DatabaseConnection(isAlive = !connectionClosedError)
       _                     <- checkConnectionAlive(connection)
-      _                     <- simulateExecutionTime(parameters.queryTimeoutSeconds)
+      _                     <- simulateExecutionTime
       maybeRecord           <- simulateRetrieveResults(getRecordById(id, table))
     } yield maybeRecord
 
-    handleDBErrors(result)
+    result
   }
 
-  private def handleDBErrors[A](effect: IO[DatabaseException, A]): IO[DatabaseException, A] =
-    effect.catchAll((dbException: DatabaseException) => dbException.logError() *> effect)
+  override def executeQuery(table: TableName): IO[DatabaseException, List[Record]] = {
+    val result: IO[DatabaseException, List[Record]] = for {
+      isConnectionClosedError <- isErrorUsingProvidedProbability
+      connection               = DatabaseConnection(isAlive = !isConnectionClosedError)
+      _                       <- checkConnectionAlive(connection)
+      _                       <- simulateExecutionTime
+      records                 <- simulateRetrieveResults(generateRandomListOfResults(table))
+    } yield records
+
+    result
+  }
 
   private def checkConnectionAlive(connection: DatabaseConnection): IO[DatabaseException, Unit] =
     if connection.isAlive
     then ZIO.unit
     else ZIO.fail(DatabaseConnectionClosedException(logger))
 
-  private def simulateExecutionTime(timeout: Int): IO[DatabaseException, Unit] = {
+  private def simulateExecutionTime: IO[DatabaseException, Unit] = {
     val result = for {
-      randomTime <- Random.nextIntBetween(1, maxQueryDuration + 1)
-      maybeUnit  <- ZIO
-                      .sleep(randomTime.seconds)
-                      .timeout(timeout.seconds)
-      outcome    <- if maybeUnit.isDefined
-                    then ZIO.unit
-                    else ZIO.fail(DatabaseTimeoutException(logger))
+      shouldFail <- isErrorUsingProvidedProbability
+      outcome    <- if shouldFail
+                    then ZIO.fail(DatabaseTimeoutException(logger))
+                    else ZIO.unit
     } yield outcome
 
-    result.catchAll((dbException: DatabaseException) => dbException.logError() *> result)
+    result
   }
-
-  private def getRecordById(id: Int, table: TableName): Option[Record] =
-    table match {
-      case TableName.Users      =>
-        usersById.get(id)
-      case TableName.Properties =>
-        propertiesById.get(id)
-    }
 
   private def simulateRetrieveResults[A, M[_]](result: M[A]): IO[DatabaseException, M[A]] =
     for {
@@ -73,18 +69,6 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
       isError <- ZIO.succeed(double < probabilityOfError)
     } yield isError
 
-  override def simulateQuery(table: TableName): IO[DatabaseException, List[Record]] = {
-    val result: IO[DatabaseException, List[Record]] = for {
-      isConnectionClosedError <- isErrorUsingProvidedProbability
-      connection               = DatabaseConnection(isAlive = !isConnectionClosedError)
-      _                       <- checkConnectionAlive(connection)
-      _                       <- simulateExecutionTime(parameters.queryTimeoutSeconds)
-      records                 <- simulateRetrieveResults(generateRandomListOfResults(table))
-    } yield records
-
-    handleDBErrors(result)
-  }
-
   private def generateRandomListOfResults(table: TableName): List[Record] = {
     val maxRecordsToReturn: Int = 7
     val maxIdInclusive: Int     = 7
@@ -99,12 +83,18 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
 
     results.toList
   }
+
+  private def getRecordById(id: Int, table: TableName): Option[Record] =
+    table match {
+      case TableName.Users      =>
+        usersById.get(id)
+      case TableName.Properties =>
+        propertiesById.get(id)
+    }
 }
 
 object DatabaseImpl {
-
   private type DatabaseTable = Map[Int, Record]
-
   val usersById: DatabaseTable =
     HashMap(
       1 -> UserRecord(id = 1, name = "Alonzo", surname = "Church", age = 33),
