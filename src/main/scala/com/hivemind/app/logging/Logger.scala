@@ -1,6 +1,5 @@
 package com.hivemind.app.logging
 
-import com.hivemind.app.logging.HivemindLogLevel
 import zio.{Console, UIO, ZIO, ZLayer}
 
 trait Logger {
@@ -8,14 +7,9 @@ trait Logger {
 }
 
 object Logger {
-  private case class LoggerImpl(console: Console) extends Logger {
-    override def log(message: String, logLevel: HivemindLogLevel = HivemindLogLevel.INFO): UIO[Unit] =
-      console.printLine(s"${logLevel.getPrefix}: " + message).ignore
-  }
-
   val live: ZLayer[Console, Nothing, Logger] = ZLayer.scoped {
     for {
-      console <- ZIO.service[Console]
+      console <- ZIO.succeed(Console.ConsoleLive)
       impl    <- ZIO.succeed(LoggerImpl(console))
     } yield impl
   }

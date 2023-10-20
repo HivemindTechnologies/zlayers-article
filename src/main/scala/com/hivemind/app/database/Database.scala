@@ -1,8 +1,8 @@
 package com.hivemind.app.database
 
-import com.hivemind.app.database.Database
+import com.hivemind.app.config.Config
 import com.hivemind.app.database.exception.DatabaseException
-import com.hivemind.app.database.model.{DatabaseParameters, Record, TableName}
+import com.hivemind.app.database.model.{Record, TableName}
 import com.hivemind.app.logging.Logger
 import zio.{IO, ZIO, ZLayer}
 
@@ -12,10 +12,11 @@ trait Database {
 }
 
 object Database {
-  val live: ZLayer[Logger, Nothing, Database] = ZLayer.scoped {
+  val live: ZLayer[Logger with Config, Nothing, Database] = ZLayer.scoped {
     for {
       errorsLogger <- ZIO.service[Logger]
-      databaseImpl <- ZIO.succeed(DatabaseImpl(null, null))
+      config       <- ZIO.service[Config]
+      databaseImpl <- ZIO.succeed(DatabaseImpl(config.databaseParameters, errorsLogger))
     } yield databaseImpl
   }
 }
