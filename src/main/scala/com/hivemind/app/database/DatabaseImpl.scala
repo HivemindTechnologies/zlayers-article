@@ -6,10 +6,9 @@ import com.hivemind.app.database.exception.{DatabaseConnectionClosedException, D
 import com.hivemind.app.database.model.{TableName, *}
 import com.hivemind.app.logging.Logger
 import zio.*
-import zio.Random.nextDoubleBetween
-
 import scala.collection.immutable.HashMap
 import scala.util.Random.nextInt as scalaNextInt
+import scala.util.Random.between as scalaNextDouble
 
 class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Database {
 
@@ -65,7 +64,7 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
 
   private def isErrorUsingProvidedProbability: UIO[Boolean] =
     for {
-      double  <- Random.nextDoubleBetween(0.0, 100.0)
+      double  <- ZIO.succeed(scalaNextDouble(0.0, 100.0))
       isError <- ZIO.succeed(double < probabilityOfError)
     } yield isError
 

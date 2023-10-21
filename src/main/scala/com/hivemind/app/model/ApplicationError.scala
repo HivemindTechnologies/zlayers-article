@@ -2,6 +2,6 @@ package com.hivemind.app.model
 
 import zio.UIO
 
-trait ApplicationError {
+trait ApplicationError extends Exception {
   def logError(): UIO[String]
 }

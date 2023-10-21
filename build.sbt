@@ -13,6 +13,8 @@ val ScalaTestVersion = "3.2.17"
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all compile Test/compile IntegrationTest/compile")
 
+testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+
 libraryDependencies ++= Seq(
   // ZIO
   "dev.zio"       %% "zio"          % ZIOVersion,

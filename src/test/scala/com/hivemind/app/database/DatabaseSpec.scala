@@ -9,6 +9,7 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import java.io.IOException
+import scala.reflect.ClassTag
 
 object DatabaseSpec extends ZIOSpecDefault {
 
@@ -20,49 +21,39 @@ object DatabaseSpec extends ZIOSpecDefault {
   }
 
   val test1: Spec[Any, DatabaseException] = test("returns data when getObjectById(1, TableName.Users) is executed") {
-    val fixture = new Fixture
+    val fixture = new TestConfiguration
 
-    val maybeRecordIO: IO[DatabaseException, Option[Record]] = for {
+    for {
       db     <- fixture.databaseIO
       record <- db.getObjectById(1, TableName.Users)
-    } yield record
-
-    maybeRecordIO.map { (maybeRecord: Option[Record]) =>
-      val maybeResult: Option[TestResult] = for {
-        record     <- maybeRecord
-        userRecord <- record.toUserRecord
-      } yield assertTrue(userRecord.name == "Alonzo")
-
-      assert(maybeResult)(isSome)
-      maybeResult.get
-    }
+    } yield assertAlonzoChurch(record)
   }
 
-  val test2: Spec[Any, DatabaseException] = test("returns an exception getObjectById(1, TableName.Users) when is executed") {
-    val fixture = new Fixture {
-      override lazy val probability = alwaysFail
+  val test2: Spec[Any, Option[Record]] = test("returns an exception when getObjectById is executed") {
+    val fixture2 = new TestConfiguration {
+      override lazy val probability: Double = 100.0
     }
 
-    val maybeRecordIO: IO[DatabaseException, Option[Record]] = for {
-      db     <- fixture.databaseIO
-      record <- db.getObjectById(1, TableName.Users)
-    } yield record
-
-    // FIXME: Continue to compile this assertion
-    assert(maybeRecordIO)(throws(isSubtype[DatabaseConnectionClosedException](anything)))
+    for {
+      db    <- fixture2.databaseIO
+      error <- db.getObjectById(1, TableName.Users).flip
+    } yield assert(error)(isSubtype[DatabaseConnectionClosedException](anything))
   }
 
-  def spec = suite("Database implementation")(helloWorldTest, test1, test2)
+  def spec: Spec[TestEnvironment with Scope, Any] = suite("Database implementation")(helloWorldTest, test1, test2)
+
+  private def assertAlonzoChurch(value: Option[Record]): TestResult =
+    assert(value)(isSome(equalTo(UserRecord(id = 1, name = "Alonzo", surname = "Church", age = 33))))
 }
 
-class Fixture {
-  lazy val probability   = neverFails
-  lazy val testConfig    = Config(DatabaseParameters("myDB", "password", 5, probabilityOfError = probability))
-  val neverFails: Double = 0.0
-  val alwaysFail: Double = 100.0
-  val testConfigZLayer   = ZLayer.succeed(testConfig)
-  val consoleZLayer      = ZLayer.succeed(zio.Console.ConsoleLive)
-  val dbLive             = for {
+class TestConfiguration {
+  lazy val probability: Double                        = neverFails
+  lazy val testConfig: Config                         = Config(DatabaseParameters("myDB", "password", 5, probabilityOfError = probability))
+  val neverFails: Double                              = 0.0
+  val alwaysFail: Double                              = 100.0
+  val testConfigZLayer: ULayer[Config]                = ZLayer.succeed(testConfig)
+  val consoleZLayer: ULayer[Console.ConsoleLive.type] = ZLayer.succeed(zio.Console.ConsoleLive)
+  val dbLive: ZIO[Database, Nothing, Database]        = for {
     db <- ZIO.service[Database]
   } yield db
 
