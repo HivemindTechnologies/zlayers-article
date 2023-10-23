@@ -22,7 +22,7 @@ object UserServiceSpec extends ZIOSpecDefault {
     } yield assertAlonzoChurch(user)
   }
 
-  val test2: Spec[Any, Option[User]] = test("returns an exception when findUser is executed") {
+  val test2: Spec[Any, Option[User]] = test("returns an exception when findUser is executed (if probability of errors is 100%)") {
     val fixture = new TestConfiguration {
       override lazy val probabilityOfErrors: Double = 100.0
     }

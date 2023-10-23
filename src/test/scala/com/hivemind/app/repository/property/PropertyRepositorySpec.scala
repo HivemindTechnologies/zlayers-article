@@ -21,7 +21,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
     } yield assertAlonzoChurchCar(property)
   }
 
-  val test2: Spec[Any, Option[Property]] = test("returns an exception when getPropertyById is executed") {
+  val test2: Spec[Any, Option[Property]] = test("returns an exception when getPropertyById is executed (if probability of errors is 100%)") {
     val fixture = new TestConfiguration {
       override lazy val probabilityOfErrors: Double = 100.0
     }
@@ -41,10 +41,28 @@ object UserRepositorySpec extends ZIOSpecDefault {
     } yield assertAlanTuringHouse(user)
   }
 
-  def spec: Spec[TestEnvironment with Scope, Any] = suite("Property repository")(test1, test2, test3)
+  val test4: Spec[Any, RepositoryException] = test("returns all properties of Alan Turing when getPropertyByOwnerId is executed") {
+    val fixture = new TestConfiguration
+
+    for {
+      propertyRepository <- fixture.repositoryIO
+      properties         <- propertyRepository.getPropertyByOwnerId(2)
+    } yield assertAllPropertiesOfAlanTuring(properties)
+  }
+
+  val test5: Spec[Any, RepositoryException] = test("returns all properties of Haskell Curry when getPropertyByOwnerId is executed") {
+    val fixture = new TestConfiguration
+
+    for {
+      propertyRepository <- fixture.repositoryIO
+      properties         <- propertyRepository.getPropertyByOwnerId(3)
+    } yield assertAllPropertiesOfHaskellCurry(properties)
+  }
+
+  def spec: Spec[TestEnvironment with Scope, Any] = suite("Property repository")(test1, test2, test3, test4, test5)
 
   private def assertAlonzoChurchCar(value: Option[Property]): TestResult = {
-    val propertyRecord: PropertyRecord   = DatabaseImpl.car1
+    val propertyRecord: PropertyRecord   = DatabaseImpl.properties.head
     val userRecord: UserRecord           = DatabaseImpl.alonzoChurch
     val optionProperty: Option[Property] = PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord), Some(userRecord))
 
@@ -52,12 +70,62 @@ object UserRepositorySpec extends ZIOSpecDefault {
   }
 
   private def assertAlanTuringHouse(value: Option[Property]): TestResult = {
-    val propertyRecord: PropertyRecord   = DatabaseImpl.house2
+    val propertyRecord: PropertyRecord   = DatabaseImpl.properties(3)
     val userRecord: UserRecord           = DatabaseImpl.alanTuring
     val optionProperty: Option[Property] = PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord), Some(userRecord))
 
     assert(value)(equalTo(optionProperty))
   }
+
+  private def assertAllPropertiesOfAlanTuring(values: List[Property]): TestResult = {
+    val alanTuringSomeUserRecord: Option[UserRecord] = Some(DatabaseImpl.alanTuring)
+
+    val propertyRecord1: PropertyRecord  = DatabaseImpl.properties(3)
+    val maybeProperty1: Option[Property] =
+      PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord1), alanTuringSomeUserRecord)
+
+    val propertyRecord2: PropertyRecord  = DatabaseImpl.properties(4)
+    val maybeProperty2: Option[Property] =
+      PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord2), alanTuringSomeUserRecord)
+
+    val propertyRecord3: PropertyRecord  = DatabaseImpl.properties(5)
+    val maybeProperty3: Option[Property] =
+      PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord3), alanTuringSomeUserRecord)
+
+    (maybeProperty1, maybeProperty2, maybeProperty3) match {
+      case (Some(property1), Some(property2), Some(property3)) =>
+        assert(values)(hasSize(equalTo(3))) &&
+        assert(values)(hasAt(0)(equalTo(property1))) &&
+        assert(values)(hasAt(1)(equalTo(property2))) &&
+        assert(values)(hasAt(2)(equalTo(property3)))
+      case _                                                   =>
+        failedTestResult
+    }
+  }
+
+  private def assertAllPropertiesOfHaskellCurry(values: List[Property]): TestResult = {
+    val haskellCurrySomeUserRecord: Option[UserRecord] = Some(DatabaseImpl.haskellCurry)
+
+    val propertyRecord1: PropertyRecord  = DatabaseImpl.properties(6)
+    val maybeProperty1: Option[Property] =
+      PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord1), haskellCurrySomeUserRecord)
+
+    val propertyRecord2: PropertyRecord  = DatabaseImpl.properties(7)
+    val maybeProperty2: Option[Property] =
+      PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord2), haskellCurrySomeUserRecord)
+
+    (maybeProperty1, maybeProperty2) match {
+      case (Some(property1), Some(property2)) =>
+        assert(values)(hasSize(equalTo(2))) &&
+        assert(values)(hasAt(0)(equalTo(property1))) &&
+        assert(values)(hasAt(1)(equalTo(property2)))
+      case _                                  =>
+        failedTestResult
+    }
+  }
+
+  private def failedTestResult: TestResult =
+    assertTrue(false) // fail test
 }
 
 class TestConfiguration {

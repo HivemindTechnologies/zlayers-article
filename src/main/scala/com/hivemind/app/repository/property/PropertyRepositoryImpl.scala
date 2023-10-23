@@ -3,7 +3,7 @@ package com.hivemind.app.repository.property
 import com.hivemind.app.database.Database
 import com.hivemind.app.database.exception.{DatabaseConnectionClosedException, DatabaseException, DatabaseQueryExecutionException, DatabaseTimeoutException}
 import com.hivemind.app.database.model.{PropertyRecord, Record, TableName, UserRecord}
-import com.hivemind.app.model.{Property, PropertyType, User}
+import com.hivemind.app.model.{Property, PropertyType}
 import com.hivemind.app.repository.exception.{RepositoryConnectionError, RepositoryException}
 import com.hivemind.app.repository.property.PropertyRepositoryImpl.buildPropertyFromRecord
 import com.hivemind.app.repository.user.UserRepositoryImpl.*
@@ -38,6 +38,19 @@ class PropertyRepositoryImpl(database: Database) extends PropertyRepository {
     case DatabaseConnectionClosedException(logger) =>
       RepositoryConnectionError
   }
+
+  override def getPropertyByOwnerId(userId: Int): IO[RepositoryException, List[Property]] =
+    for {
+      maybeRecord            <- database.getObjectById(userId, TableName.Users).mapError(mapErrors)
+      maybeUserRecord         = maybeRecord.flatMap((record: Record) => record.toUserRecord)
+      allRecords             <- database.getAllRecords(TableName.Properties).mapError(mapErrors)
+      propertyRecordsFiltered = allRecords.filter { (record: Record) =>
+                                  val maybePropertyRecord = record.toPropertyRecord
+                                  maybePropertyRecord.fold(false)((propertyRecord: PropertyRecord) => propertyRecord.owner == userId)
+                                }
+      propertyRecords         = propertyRecordsFiltered.flatMap(_.toPropertyRecord.toList)
+      listOfProperties        = propertyRecords.flatMap((propertyRecord: PropertyRecord) => buildPropertyFromRecord(Some(propertyRecord), maybeUserRecord))
+    } yield listOfProperties
 }
 
 object PropertyRepositoryImpl {

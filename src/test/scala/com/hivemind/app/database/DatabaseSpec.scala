@@ -19,7 +19,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     } yield assertAlonzoChurch(record)
   }
 
-  val test2: Spec[Any, Option[Record]] = test("returns an exception when getObjectById is executed") {
+  val test2: Spec[Any, Option[Record]] = test("returns an exception when getObjectById is executed (if probability of errors is 100%)") {
     val fixture = new TestConfiguration {
       override lazy val probabilityOfErrors: Double = 100.0
     }
@@ -57,21 +57,21 @@ object DatabaseSpec extends ZIOSpecDefault {
     } yield assertProperty2(record)
   }
 
-  val test6: Spec[Any, DatabaseException] = test("returns list of users when executeQuery is executed") {
+  val test6: Spec[Any, DatabaseException] = test("returns list of users when getAllRecords is executed") {
     val fixture = new TestConfiguration
 
     for {
       db            <- fixture.databaseIO
-      listOfRecords <- db.executeQuery(TableName.Users)
+      listOfRecords <- db.getAllRecords(TableName.Users)
     } yield assertListOfUsers(listOfRecords)
   }
 
-  val test7: Spec[Any, DatabaseException] = test("returns list of properties when executeQuery is executed") {
+  val test7: Spec[Any, DatabaseException] = test("returns list of properties when getAllRecords is executed") {
     val fixture = new TestConfiguration
 
     for {
       db            <- fixture.databaseIO
-      listOfRecords <- db.executeQuery(TableName.Properties)
+      listOfRecords <- db.getAllRecords(TableName.Properties)
     } yield assertListOfProperties(listOfRecords)
   }
 
@@ -84,10 +84,10 @@ object DatabaseSpec extends ZIOSpecDefault {
     assert(value)(isSome(equalTo(DatabaseImpl.alanTuring)))
 
   private def assertProperty1(value: Option[Record]): TestResult =
-    assert(value)(isSome(equalTo(DatabaseImpl.car1)))
+    assert(value)(isSome(equalTo(DatabaseImpl.properties.head)))
 
   private def assertProperty2(value: Option[Record]): TestResult =
-    assert(value)(isSome(equalTo(DatabaseImpl.house1)))
+    assert(value)(isSome(equalTo(DatabaseImpl.properties(1))))
 
   private def assertListOfUsers(values: List[Record]): TestResult =
     assert(values)(hasSize(equalTo(3))) &&
@@ -96,10 +96,8 @@ object DatabaseSpec extends ZIOSpecDefault {
     assert(values)(hasAt(2)(equalTo(DatabaseImpl.haskellCurry)))
 
   private def assertListOfProperties(values: List[Record]): TestResult =
-    assert(values)(hasSize(equalTo(3))) &&
-    assert(values)(hasAt(0)(equalTo(DatabaseImpl.car1))) &&
-    assert(values)(hasAt(1)(equalTo(DatabaseImpl.house1))) &&
-    assert(values)(hasAt(2)(equalTo(DatabaseImpl.boat1)))
+    assert(values)(hasSize(equalTo(8))) &&
+    assert(values)(equalTo(DatabaseImpl.properties))
 
 }
 
