@@ -12,7 +12,7 @@ trait Database {
 }
 
 object Database {
-  val live: ZLayer[Logger with Config, Nothing, Database] = ZLayer.scoped {
+  val live: ZLayer[Logger with Config, Nothing, Database] = ZLayer {
     for {
       errorsLogger <- ZIO.service[Logger]
       config       <- ZIO.service[Config]

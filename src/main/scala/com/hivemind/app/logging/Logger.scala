@@ -7,7 +7,7 @@ trait Logger {
 }
 
 object Logger {
-  val live: ZLayer[Console, Nothing, Logger] = ZLayer.scoped {
+  val live: ZLayer[Console, Nothing, Logger] = ZLayer {
     for {
       console <- ZIO.succeed(Console.ConsoleLive)
       impl    <- ZIO.succeed(LoggerImpl(console))
