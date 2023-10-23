@@ -110,7 +110,7 @@ class TestConfiguration {
   lazy val testConfig: Config                         = Config.testConfig(probabilityOfErrors)
   val testConfigZLayer: ULayer[Config]                = ZLayer.succeed(testConfig)
   val consoleZLayer: ULayer[Console.ConsoleLive.type] = ZLayer.succeed(zio.Console.ConsoleLive)
-  val dbTest: ZIO[Database, Nothing, Database]        = ZIO.service[Database]
+  val dbTest: URIO[Database, Database]                = ZIO.service[Database]
 
   val databaseIO: UIO[Database] = dbTest.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live)
 }
