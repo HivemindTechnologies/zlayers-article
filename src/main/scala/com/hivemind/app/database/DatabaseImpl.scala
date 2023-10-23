@@ -42,6 +42,12 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
     result
   }
 
+  private def randomErrorUsingGivenProbability: UIO[Boolean] =
+    for {
+      double  <- ZIO.succeed(scalaNextDouble(0.0, 100.0))
+      isError <- ZIO.succeed(double < probabilityOfError)
+    } yield isError
+
   private def simulateRetrieveResults[A, M[_]](result: M[A]): IO[DatabaseException, M[A]] =
     for {
       isError <- randomErrorUsingGivenProbability
@@ -49,12 +55,6 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
                  then ZIO.fail(DatabaseQueryExecutionException(logger))
                  else ZIO.succeed(result)
     } yield outcome
-
-  private def randomErrorUsingGivenProbability: UIO[Boolean] =
-    for {
-      double  <- ZIO.succeed(scalaNextDouble(0.0, 100.0))
-      isError <- ZIO.succeed(double < probabilityOfError)
-    } yield isError
 
   private def getRecordById(id: Int, table: TableName): Option[Record] =
     table match {
@@ -107,7 +107,7 @@ object DatabaseImpl {
   private type DatabaseTable = Map[Int, Record]
 
   val alonzoChurch: UserRecord = UserRecord(id = 1, name = "Alonzo", surname = "Church", age = 33)
-  val alanTuring: UserRecord   = UserRecord(id = 1, name = "Alonzo", surname = "Church", age = 33)
+  val alanTuring: UserRecord   = UserRecord(id = 2, name = "Alan", surname = "Turing", age = 30)
   val haskellCurry: UserRecord = UserRecord(id = 3, name = "Haskell", surname = "Curry", age = 46)
 
   val usersById: DatabaseTable =

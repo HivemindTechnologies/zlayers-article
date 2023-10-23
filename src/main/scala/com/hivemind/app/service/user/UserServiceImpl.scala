@@ -1,8 +1,8 @@
 package com.hivemind.app.service.user
 
 import com.hivemind.app.model.User
-import com.hivemind.app.repository.UserRepository
 import com.hivemind.app.repository.exception.RepositoryConnectionError
+import com.hivemind.app.repository.user.UserRepository
 import com.hivemind.app.service.exception.{ServiceConnectionError, ServiceException}
 import zio.IO
 

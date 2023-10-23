@@ -5,7 +5,7 @@ import com.hivemind.app.database.model.UserRecord
 import com.hivemind.app.database.{Database, DatabaseImpl}
 import com.hivemind.app.logging.Logger
 import com.hivemind.app.model.User
-import com.hivemind.app.repository.{UserRepository, UserRepositoryImpl}
+import com.hivemind.app.repository.user.{UserRepository, UserRepositoryImpl}
 import com.hivemind.app.service.exception.ServiceException
 import zio.*
 import zio.test.*

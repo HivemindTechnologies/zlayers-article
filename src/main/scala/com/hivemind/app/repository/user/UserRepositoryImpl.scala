@@ -1,4 +1,4 @@
-package com.hivemind.app.repository
+package com.hivemind.app.repository.user
 
 import com.hivemind.app.database.Database
 import com.hivemind.app.database.exception.{DatabaseConnectionClosedException, DatabaseQueryExecutionException, DatabaseTimeoutException}

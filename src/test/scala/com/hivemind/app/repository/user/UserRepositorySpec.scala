@@ -6,7 +6,6 @@ import com.hivemind.app.database.{Database, DatabaseImpl}
 import com.hivemind.app.logging.Logger
 import com.hivemind.app.model.User
 import com.hivemind.app.repository.exception.RepositoryException
-import com.hivemind.app.repository.{UserRepository, UserRepositoryImpl}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
