@@ -91,13 +91,11 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
 }
 
 object DatabaseImpl {
-  private type DatabaseTable = Map[Int, Record]
-
   val alonzoChurch: UserRecord = UserRecord(id = 1, name = "Alonzo", surname = "Church", age = 33)
   val alanTuring: UserRecord   = UserRecord(id = 2, name = "Alan", surname = "Turing", age = 30)
   val haskellCurry: UserRecord = UserRecord(id = 3, name = "Haskell", surname = "Curry", age = 46)
 
-  val usersById: DatabaseTable         =
+  val usersById: Map[Int, UserRecord]  =
     HashMap(
       1 -> alonzoChurch,
       2 -> alanTuring,
@@ -114,6 +112,6 @@ object DatabaseImpl {
     PropertyRecord(id = 8, propertyType = "Car", price = 6500, owner = 3),
   )
 
-  val propertiesById: DatabaseTable =
+  val propertiesById: Map[Int, PropertyRecord] =
     properties.zipWithIndex.map((property: PropertyRecord, index: Int) => properties(index).id -> properties(index)).toMap
 }

@@ -70,7 +70,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
   }
 
   private def assertAlanTuringHouse(value: Option[Property]): TestResult = {
-    val propertyRecord: PropertyRecord   = DatabaseImpl.properties(3)
+    val propertyRecord: PropertyRecord   = DatabaseImpl.propertiesById(4)
     val userRecord: UserRecord           = DatabaseImpl.alanTuring
     val optionProperty: Option[Property] = PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord), Some(userRecord))
 
@@ -80,15 +80,15 @@ object UserRepositorySpec extends ZIOSpecDefault {
   private def assertAllPropertiesOfAlanTuring(values: List[Property]): TestResult = {
     val alanTuringSomeUserRecord: Option[UserRecord] = Some(DatabaseImpl.alanTuring)
 
-    val propertyRecord1: PropertyRecord  = DatabaseImpl.properties(3)
+    val propertyRecord1: PropertyRecord  = DatabaseImpl.propertiesById(4)
     val maybeProperty1: Option[Property] =
       PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord1), alanTuringSomeUserRecord)
 
-    val propertyRecord2: PropertyRecord  = DatabaseImpl.properties(4)
+    val propertyRecord2: PropertyRecord  = DatabaseImpl.propertiesById(5)
     val maybeProperty2: Option[Property] =
       PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord2), alanTuringSomeUserRecord)
 
-    val propertyRecord3: PropertyRecord  = DatabaseImpl.properties(5)
+    val propertyRecord3: PropertyRecord  = DatabaseImpl.propertiesById(6)
     val maybeProperty3: Option[Property] =
       PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord3), alanTuringSomeUserRecord)
 
