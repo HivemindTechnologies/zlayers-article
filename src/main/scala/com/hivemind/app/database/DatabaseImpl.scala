@@ -6,9 +6,9 @@ import com.hivemind.app.database.exception.{DatabaseConnectionClosedException, D
 import com.hivemind.app.database.model.{TableName, *}
 import com.hivemind.app.logging.Logger
 import zio.*
+
 import scala.collection.immutable.HashMap
-import scala.util.Random.nextInt as scalaNextInt
-import scala.util.Random.between as scalaNextDouble
+import scala.util.Random.{between as scalaNextDouble, nextInt as scalaNextInt}
 
 class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Database {
 
@@ -16,24 +16,12 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
 
   override def getObjectById(id: Int, table: TableName): IO[DatabaseException, Option[Record]] = {
     val result: IO[DatabaseException, Option[Record]] = for {
-      connectionClosedError <- isErrorUsingProvidedProbability
+      connectionClosedError <- randomErrorUsingGivenProbability
       connection             = DatabaseConnection(isAlive = !connectionClosedError)
       _                     <- checkConnectionAlive(connection)
       _                     <- simulateExecutionTime
       maybeRecord           <- simulateRetrieveResults(getRecordById(id, table))
     } yield maybeRecord
-
-    result
-  }
-
-  override def executeQuery(table: TableName): IO[DatabaseException, List[Record]] = {
-    val result: IO[DatabaseException, List[Record]] = for {
-      isConnectionClosedError <- isErrorUsingProvidedProbability
-      connection               = DatabaseConnection(isAlive = !isConnectionClosedError)
-      _                       <- checkConnectionAlive(connection)
-      _                       <- simulateExecutionTime
-      records                 <- simulateRetrieveResults(generateRandomListOfResults(table))
-    } yield records
 
     result
   }
@@ -45,7 +33,7 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
 
   private def simulateExecutionTime: IO[DatabaseException, Unit] = {
     val result = for {
-      shouldFail <- isErrorUsingProvidedProbability
+      shouldFail <- randomErrorUsingGivenProbability
       outcome    <- if shouldFail
                     then ZIO.fail(DatabaseTimeoutException(logger))
                     else ZIO.unit
@@ -56,19 +44,45 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
 
   private def simulateRetrieveResults[A, M[_]](result: M[A]): IO[DatabaseException, M[A]] =
     for {
-      isError <- isErrorUsingProvidedProbability
+      isError <- randomErrorUsingGivenProbability
       outcome <- if isError
                  then ZIO.fail(DatabaseQueryExecutionException(logger))
                  else ZIO.succeed(result)
     } yield outcome
 
-  private def isErrorUsingProvidedProbability: UIO[Boolean] =
+  private def randomErrorUsingGivenProbability: UIO[Boolean] =
     for {
       double  <- ZIO.succeed(scalaNextDouble(0.0, 100.0))
       isError <- ZIO.succeed(double < probabilityOfError)
     } yield isError
 
-  private def generateRandomListOfResults(table: TableName): List[Record] = {
+  private def getRecordById(id: Int, table: TableName): Option[Record] =
+    table match {
+      case TableName.Users      =>
+        usersById.get(id)
+      case TableName.Properties =>
+        propertiesById.get(id)
+    }
+
+  override def executeQuery(table: TableName): IO[DatabaseException, List[Record]] = {
+    val result: IO[DatabaseException, List[Record]] = for {
+      isConnectionClosedError <- randomErrorUsingGivenProbability
+      connection               = DatabaseConnection(isAlive = !isConnectionClosedError)
+      _                       <- checkConnectionAlive(connection)
+      _                       <- simulateExecutionTime
+      notDeterministic        <- randomErrorUsingGivenProbability
+      results                 <- ZIO.succeed(
+                                   if notDeterministic
+                                   then randomListOfResults(table)
+                                   else fixedListOfResults(table),
+                                 )
+      records                 <- simulateRetrieveResults(results)
+    } yield records
+
+    result
+  }
+
+  private def randomListOfResults(table: TableName): List[Record] = {
     val maxRecordsToReturn: Int = 7
     val maxIdInclusive: Int     = 7
 
@@ -83,12 +97,9 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
     results.toList
   }
 
-  private def getRecordById(id: Int, table: TableName): Option[Record] =
-    table match {
-      case TableName.Users      =>
-        usersById.get(id)
-      case TableName.Properties =>
-        propertiesById.get(id)
+  private def fixedListOfResults(table: TableName): List[Record] =
+    (1 to 3).toList.flatMap { index =>
+      getRecordById(index, table).toList
     }
 }
 

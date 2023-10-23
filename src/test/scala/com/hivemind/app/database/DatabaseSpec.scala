@@ -8,16 +8,7 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-import java.io.IOException
-
 object DatabaseSpec extends ZIOSpecDefault {
-
-  val helloWorldTest: Spec[Any, IOException] = test("sayHello correctly displays output") {
-    for {
-      _      <- Console.printLine("Hello, World!")
-      output <- TestConsole.output
-    } yield assertTrue(output == Vector("Hello, World!\n"))
-  }
 
   val test1: Spec[Any, DatabaseException] = test("returns Alonzo Church when getObjectById is executed") {
     val fixture = new TestConfiguration
@@ -66,7 +57,25 @@ object DatabaseSpec extends ZIOSpecDefault {
     } yield assertProperty2(record)
   }
 
-  def spec: Spec[TestEnvironment with Scope, Any] = suite("Database implementation")(helloWorldTest, test1, test2, test3, test4, test5)
+  val test6: Spec[Any, DatabaseException] = test("returns list of users when executeQuery is executed") {
+    val fixture = new TestConfiguration
+
+    for {
+      db            <- fixture.databaseIO
+      listOfRecords <- db.executeQuery(TableName.Users)
+    } yield assertListOfUsers(listOfRecords)
+  }
+
+  val test7: Spec[Any, DatabaseException] = test("returns list of properties when executeQuery is executed") {
+    val fixture = new TestConfiguration
+
+    for {
+      db            <- fixture.databaseIO
+      listOfRecords <- db.executeQuery(TableName.Properties)
+    } yield assertListOfProperties(listOfRecords)
+  }
+
+  def spec: Spec[TestEnvironment with Scope, Any] = suite("Database implementation")(test1, test2, test3, test4, test5, test6, test7)
 
   private def assertAlonzoChurch(value: Option[Record]): TestResult =
     assert(value)(isSome(equalTo(UserRecord(id = 1, name = "Alonzo", surname = "Church", age = 33))))
@@ -79,12 +88,25 @@ object DatabaseSpec extends ZIOSpecDefault {
 
   private def assertProperty2(value: Option[Record]): TestResult =
     assert(value)(isSome(equalTo(PropertyRecord(id = 2, propertyType = "House", price = 230500, owner = 1))))
+
+  private def assertListOfUsers(values: List[Record]): TestResult =
+    assert(values)(hasSize(equalTo(3))) &&
+    assert(values)(hasAt(0)(equalTo(UserRecord(id = 1, name = "Alonzo", surname = "Church", age = 33)))) &&
+    assert(values)(hasAt(1)(equalTo(UserRecord(id = 2, name = "Alan", surname = "Turing", age = 31)))) &&
+    assert(values)(hasAt(2)(equalTo(UserRecord(id = 3, name = "Haskell", surname = "Curry", age = 46))))
+
+  private def assertListOfProperties(values: List[Record]): TestResult =
+    assert(values)(hasSize(equalTo(3))) &&
+    assert(values)(hasAt(0)(equalTo(PropertyRecord(id = 1, propertyType = "Car", price = 17800, owner = 1)))) &&
+    assert(values)(hasAt(1)(equalTo(PropertyRecord(id = 2, propertyType = "House", price = 230500, owner = 1)))) &&
+    assert(values)(hasAt(2)(equalTo(PropertyRecord(id = 3, propertyType = "Boat", price = 180000, owner = 1))))
+
 }
 
 class TestConfiguration {
-  lazy val probabilityOfErrors: Double                = neverFails
+  lazy val probabilityOfErrors: Double                = neverFail
   lazy val testConfig: Config                         = Config(DatabaseParameters("myDB", "password", 5, probabilityOfError = probabilityOfErrors))
-  val neverFails: Double                              = 0.0
+  val neverFail: Double                               = 0.0
   val alwaysFail: Double                              = 100.0
   val testConfigZLayer: ULayer[Config]                = ZLayer.succeed(testConfig)
   val consoleZLayer: ULayer[Console.ConsoleLive.type] = ZLayer.succeed(zio.Console.ConsoleLive)
