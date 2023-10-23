@@ -105,22 +105,35 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
 
 object DatabaseImpl {
   private type DatabaseTable = Map[Int, Record]
+
+  val alonzoChurch: UserRecord = UserRecord(id = 1, name = "Alonzo", surname = "Church", age = 33)
+  val alanTuring: UserRecord   = UserRecord(id = 1, name = "Alonzo", surname = "Church", age = 33)
+  val haskellCurry: UserRecord = UserRecord(id = 3, name = "Haskell", surname = "Curry", age = 46)
+
   val usersById: DatabaseTable =
     HashMap(
-      1 -> UserRecord(id = 1, name = "Alonzo", surname = "Church", age = 33),
-      2 -> UserRecord(id = 2, name = "Alan", surname = "Turing", age = 31),
-      3 -> UserRecord(id = 3, name = "Haskell", surname = "Curry", age = 46),
+      1 -> alonzoChurch,
+      2 -> alanTuring,
+      3 -> haskellCurry,
     )
+
+  val car1   = PropertyRecord(id = 1, propertyType = "Car", price = 17800, owner = 1)
+  val house1 = PropertyRecord(id = 2, propertyType = "House", price = 230500, owner = 1)
+  val boat1  = PropertyRecord(id = 3, propertyType = "Boat", price = 180000, owner = 1)
+  val house2 = PropertyRecord(id = 4, propertyType = "House", price = 117900, owner = 2)
+  val car2   = PropertyRecord(id = 5, propertyType = "Car", price = 2000, owner = 2)
+  val house3 = PropertyRecord(id = 6, propertyType = "House", price = 124900, owner = 3)
+  val car3   = PropertyRecord(id = 7, propertyType = "Car", price = 6500, owner = 3)
 
   val propertiesById: DatabaseTable =
     HashMap(
-      1 -> PropertyRecord(id = 1, propertyType = "Car", price = 17800, owner = 1),
-      2 -> PropertyRecord(id = 2, propertyType = "House", price = 230500, owner = 1),
-      3 -> PropertyRecord(id = 3, propertyType = "Boat", price = 180000, owner = 1),
-      4 -> PropertyRecord(id = 4, propertyType = "House", price = 117900, owner = 2),
-      5 -> PropertyRecord(id = 5, propertyType = "Car", price = 2000, owner = 2),
-      6 -> PropertyRecord(id = 6, propertyType = "House", price = 124900, owner = 3),
-      7 -> PropertyRecord(id = 7, propertyType = "Car", price = 6500, owner = 3),
+      1 -> car1,
+      2 -> house1,
+      3 -> boat1,
+      4 -> house2,
+      5 -> car2,
+      6 -> house3,
+      7 -> car3,
     )
 
 }

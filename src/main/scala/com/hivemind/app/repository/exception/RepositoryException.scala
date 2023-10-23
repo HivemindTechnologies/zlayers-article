@@ -1,7 +1,6 @@
 package com.hivemind.app.repository.exception
 
 import com.hivemind.app.model.ApplicationError
-import com.hivemind.app.repository.exception.{RepositoryConnectionError, RepositoryException}
 import zio.{Console, UIO}
 
 sealed trait RepositoryException extends ApplicationError {

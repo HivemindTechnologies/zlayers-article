@@ -8,6 +8,9 @@ import com.hivemind.app.repository.exception.{RepositoryConnectionError, Reposit
 import zio.{IO, ZIO}
 
 class UserRepositoryImpl(database: Database) extends UserRepository {
+
+  import UserRepositoryImpl.*
+
   override def getUserById(id: Int): IO[RepositoryException, Option[User]] =
     for {
       maybeRecord <- database.getObjectById(id, TableName.Users).mapError {
@@ -21,7 +24,10 @@ class UserRepositoryImpl(database: Database) extends UserRepository {
       maybeUser   <- ZIO.succeed(maybeRecord.flatMap(buildUserFromRecord))
     } yield maybeUser
 
-  private def buildUserFromRecord(record: Record): Option[User] = record match {
+}
+
+object UserRepositoryImpl {
+  def buildUserFromRecord(record: Record): Option[User] = record match {
     case userRecord: UserRecord =>
       Some(User(id = userRecord.id, name = userRecord.name, surname = userRecord.surname, age = userRecord.age))
     case _                      =>
