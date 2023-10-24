@@ -6,30 +6,30 @@ You can find the [article in this link](http://hivemindtechnologies.com).
 ## Architecture of the Application
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
 flowchart TB
-subgraph "Application Layer"
+subgraph appLayer["Application Layer"]
     direction LR
-    app("Application")
-    appConfig("App Config")
-    appLogger("App Logger")
+    app["Application"]
+    appConfig["App Config"]
+    appLogger["App Logger"]
 end
 
-subgraph "Service Layer"
-    propService("Property Service")
-    userService("User Service")
+subgraph serviceLayer["Service Layer"]
+    propService["Property Service"]
+    userService["User Service"]
 end
 
-subgraph "Repository Layer"
-    userRepo("User Repository")
-    propRepo("Property Repository")
+subgraph repoLayer["Repository Layer"]
+    userRepo["User Repository"]
+    propRepo["Property Repository"]
 end
 
-subgraph "Database Layer"
-    database("Database")
+subgraph dbLayer["Database Layer"]
+    database["Database"]
     db[(Database)]
-    dbConfig("Database Config")
-    dbLogger("DB Logger")
+    dbConfig["Database Config"]
+    dbLogger["DB Logger"]
 end
 
 app -."findUser()".-> userService -.getUserById().-> userRepo -."getObjectById()".-> database -."`&lt; SQL query &gt;`".-> db
