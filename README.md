@@ -32,7 +32,7 @@ subgraph dbLayer["Database Layer"]
     dbLogger["DB Logger"]
 end
 
-app -."findUser()".-> userService -.getUserById().-> userRepo -."getObjectById()".-> database -."`&lt; SQL query &gt;`".-> db
+app -."findUser()".-> userService -.getUserById().-> userRepo -."getObjectById()".-> database -."SQL query".-> db
 
 app -."findProperty()".-> propService -.getPropertyById().-> propRepo -."getObjectById()".-> database
 
