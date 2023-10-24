@@ -4,7 +4,7 @@ import com.hivemind.app.config.Config
 import com.hivemind.app.database.exception.DatabaseException
 import com.hivemind.app.database.model.{Record, TableName}
 import com.hivemind.app.logging.Logger
-import zio.{IO, ZIO, ZLayer}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 trait Database {
   def getObjectById(id: Int, table: TableName): IO[DatabaseException, Option[Record]]
@@ -12,7 +12,7 @@ trait Database {
 }
 
 object Database {
-  val live: ZLayer[Logger with Config, Nothing, Database] = ZLayer {
+  val live: URLayer[Logger with Config, Database] = ZLayer {
     for {
       errorsLogger <- ZIO.service[Logger]
       config       <- ZIO.service[Config]

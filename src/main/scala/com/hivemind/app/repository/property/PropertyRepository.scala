@@ -3,7 +3,7 @@ package com.hivemind.app.repository.property
 import com.hivemind.app.database.Database
 import com.hivemind.app.model.Property
 import com.hivemind.app.repository.exception.RepositoryException
-import zio.{IO, ZIO, ZLayer}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 trait PropertyRepository {
   def getPropertyById(propertyId: Int): IO[RepositoryException, Option[Property]]
@@ -11,7 +11,7 @@ trait PropertyRepository {
 }
 
 object PropertyRepository {
-  val live: ZLayer[Database, Nothing, PropertyRepository] = ZLayer {
+  val live: URLayer[Database, PropertyRepository] = ZLayer {
     for {
       database <- ZIO.service[Database]
     } yield PropertyRepositoryImpl(database)

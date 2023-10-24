@@ -42,12 +42,6 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
     result
   }
 
-  private def randomErrorUsingGivenProbability: UIO[Boolean] =
-    for {
-      double  <- ZIO.succeed(scalaNextDouble(0.0, 100.0))
-      isError <- ZIO.succeed(double < probabilityOfError)
-    } yield isError
-
   private def simulateRetrieveResults[A, M[_]](result: M[A]): IO[DatabaseException, M[A]] =
     for {
       isError <- randomErrorUsingGivenProbability
@@ -55,6 +49,12 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
                  then ZIO.fail(DatabaseQueryExecutionException(logger))
                  else ZIO.succeed(result)
     } yield outcome
+
+  private def randomErrorUsingGivenProbability: UIO[Boolean] =
+    for {
+      double  <- ZIO.succeed(scalaNextDouble(0.0, 100.0))
+      isError <- ZIO.succeed(double < probabilityOfError)
+    } yield isError
 
   private def getRecordById(id: Int, table: TableName): Option[Record] =
     table match {
