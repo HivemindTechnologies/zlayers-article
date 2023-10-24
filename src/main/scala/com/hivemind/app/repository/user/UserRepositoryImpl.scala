@@ -21,7 +21,7 @@ class UserRepositoryImpl(database: Database) extends UserRepository {
                        case DatabaseConnectionClosedException(logger) =>
                          RepositoryConnectionError
                      }
-      maybeUser   <- ZIO.succeed(maybeRecord.flatMap(buildUserFromRecord))
+      maybeUser    = maybeRecord.flatMap(buildUserFromRecord)
     } yield maybeUser
 
 }

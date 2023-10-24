@@ -1,11 +1,11 @@
 package com.hivemind.app.config
 
-import zio.ZLayer
+import zio.{ULayer, ZLayer}
 
 case class Config(databaseParameters: DatabaseParameters)
 
 object Config {
-  val live: ZLayer[Any, Nothing, Config]     =
+  val live: ULayer[Config]                   =
     ZLayer.succeed(
       Config(databaseParameters = myDBParams),
     )

@@ -46,7 +46,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
 
     for {
       propertyRepository <- fixture.repositoryIO
-      properties         <- propertyRepository.getPropertyByOwnerId(2)
+      properties         <- propertyRepository.getPropertiesByOwnerId(2)
     } yield assertAllPropertiesOfAlanTuring(properties)
   }
 
@@ -55,7 +55,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
 
     for {
       propertyRepository <- fixture.repositoryIO
-      properties         <- propertyRepository.getPropertyByOwnerId(3)
+      properties         <- propertyRepository.getPropertiesByOwnerId(3)
     } yield assertAllPropertiesOfHaskellCurry(properties)
   }
 

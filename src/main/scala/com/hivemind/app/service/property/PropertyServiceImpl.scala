@@ -9,7 +9,7 @@ import zio.IO
 class PropertyServiceImpl(propertyRepository: PropertyRepository) extends PropertyService {
   override def findPropertiesOfUser(userId: Int): IO[ServiceException, Set[Property]] =
     for {
-      list <- propertyRepository.getPropertyByOwnerId(userId = userId).mapError { case RepositoryConnectionError => ServiceConnectionError }
+      list <- propertyRepository.getPropertiesByOwnerId(userId = userId).mapError { case RepositoryConnectionError => ServiceConnectionError }
     } yield list.toSet
 
   override def findProperty(propertyId: Int): IO[ServiceException, Option[Property]] =

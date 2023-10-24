@@ -39,7 +39,7 @@ class PropertyRepositoryImpl(database: Database) extends PropertyRepository {
       RepositoryConnectionError
   }
 
-  override def getPropertyByOwnerId(userId: Int): IO[RepositoryException, List[Property]] =
+  override def getPropertiesByOwnerId(userId: Int): IO[RepositoryException, List[Property]] =
     for {
       maybeRecord            <- database.getObjectById(userId, TableName.Users).mapError(mapErrors)
       maybeUserRecord         = maybeRecord.flatMap((record: Record) => record.toUserRecord)

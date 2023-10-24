@@ -7,7 +7,7 @@ import zio.{IO, ZIO, ZLayer}
 
 trait PropertyRepository {
   def getPropertyById(propertyId: Int): IO[RepositoryException, Option[Property]]
-  def getPropertyByOwnerId(userId: Int): IO[RepositoryException, List[Property]]
+  def getPropertiesByOwnerId(userId: Int): IO[RepositoryException, List[Property]]
 }
 
 object PropertyRepository {
