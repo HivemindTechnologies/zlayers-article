@@ -5,7 +5,7 @@ import com.hivemind.app.database.exception.{DatabaseConnectionClosedException, D
 import com.hivemind.app.database.model.{Record, TableName, UserRecord}
 import com.hivemind.app.model.User
 import com.hivemind.app.repository.exception.{RepositoryConnectionError, RepositoryException}
-import zio.{IO, ZIO}
+import zio.IO
 
 class UserRepositoryImpl(database: Database) extends UserRepository {
 

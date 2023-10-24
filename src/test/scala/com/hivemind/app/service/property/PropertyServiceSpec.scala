@@ -71,11 +71,11 @@ object PropertyServiceSpec extends ZIOSpecDefault {
   }
 
   private def assertProperties(userId: Int, propertyIds: List[Int], value: Set[Property]) = {
-    val userRecord: UserRecord = DatabaseImpl.usersById(userId)
+    val maybeUserRecord: Option[UserRecord] = DatabaseImpl.usersById.get(userId)
 
     propertyIds.foldLeft(assertTrue(true)) { (prevRes: TestResult, propertyId: Int) =>
-      val propertyRecord: PropertyRecord   = DatabaseImpl.propertiesById(propertyId)
-      val optionProperty: Option[Property] = PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord), Some(userRecord))
+      val maybePropertyRecord: Option[PropertyRecord] = DatabaseImpl.propertiesById.get(propertyId)
+      val optionProperty: Option[Property]            = PropertyRepositoryImpl.buildPropertyFromRecord(maybePropertyRecord, maybeUserRecord)
 
       prevRes && assertTrue(optionProperty.isDefined) && assertTrue(value.contains(optionProperty.get))
     }
