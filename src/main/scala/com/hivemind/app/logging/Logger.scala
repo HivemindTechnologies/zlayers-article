@@ -1,16 +1,26 @@
 package com.hivemind.app.logging
 
-import zio.{Console, UIO, URLayer, ZIO, ZLayer}
+import zio.{Console, Ref, UIO, URLayer, ZIO, ZLayer}
 
 trait Logger {
   def log(message: String, logLevel: HivemindLogLevel = HivemindLogLevel.INFO): UIO[Unit]
 }
 
 object Logger {
-  val live: URLayer[Console, Logger] = ZLayer {
+//  val live: URLayer[Console, Logger] = ZLayer {
+//    for {
+//      console <- ZIO.succeed(Console.ConsoleLive)
+//      impl    <- ZIO.succeed(LoggerImpl(console))
+//    } yield impl
+//  }
+
+  val live: URLayer[Console, Logger] = ZLayer.scoped {
     for {
-      console <- ZIO.succeed(Console.ConsoleLive)
-      impl    <- ZIO.succeed(LoggerImpl(console))
+      ref     <- Ref.make(0)
+      console <- ZIO.service[Console]
+      impl    <- ZIO.succeed(LoggerWithLineCounter(console, ref))
+      _       <- impl.initializer
+      _       <- ZIO.addFinalizer(impl.finalizer)
     } yield impl
   }
 }
