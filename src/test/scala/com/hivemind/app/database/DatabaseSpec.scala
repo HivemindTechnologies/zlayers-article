@@ -84,10 +84,10 @@ object DatabaseSpec extends ZIOSpecDefault {
     assert(value)(isSome(equalTo(DatabaseImpl.alanTuring)))
 
   private def assertProperty1(value: Option[Record]): TestResult =
-    assert(value)(isSome(equalTo(DatabaseImpl.properties.head)))
+    assert(value)(equalTo(DatabaseImpl.propertiesById.get(1)))
 
   private def assertProperty2(value: Option[Record]): TestResult =
-    assert(value)(isSome(equalTo(DatabaseImpl.propertiesById(2))))
+    assert(value)(equalTo(DatabaseImpl.propertiesById.get(2)))
 
   private def assertListOfUsers(values: List[Record]): TestResult =
     assert(values)(hasSize(equalTo(3))) &&

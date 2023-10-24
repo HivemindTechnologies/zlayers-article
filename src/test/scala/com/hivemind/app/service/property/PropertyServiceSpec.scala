@@ -63,9 +63,9 @@ object PropertyServiceSpec extends ZIOSpecDefault {
   def spec: Spec[TestEnvironment with Scope, Any] = suite("Property service")(test1, test2, test3, test4, test5)
 
   private def assertProperty(userId: Int, propertyId: Int, value: Option[Property]): TestResult = {
-    val propertyRecord: PropertyRecord   = DatabaseImpl.propertiesById(propertyId)
-    val userRecord: UserRecord           = DatabaseImpl.usersById(userId)
-    val optionProperty: Option[Property] = PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord), Some(userRecord))
+    val maybePropertyRecord: Option[PropertyRecord] = DatabaseImpl.propertiesById.get(propertyId)
+    val maybeUserRecord: Option[UserRecord]         = DatabaseImpl.usersById.get(userId)
+    val optionProperty: Option[Property]            = PropertyRepositoryImpl.buildPropertyFromRecord(maybePropertyRecord, maybeUserRecord)
 
     assert(value)(equalTo(optionProperty))
   }

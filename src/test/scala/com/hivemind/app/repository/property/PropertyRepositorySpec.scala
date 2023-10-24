@@ -70,9 +70,9 @@ object UserRepositorySpec extends ZIOSpecDefault {
   }
 
   private def assertAlanTuringHouse(value: Option[Property]): TestResult = {
-    val propertyRecord: PropertyRecord   = DatabaseImpl.propertiesById(4)
-    val userRecord: UserRecord           = DatabaseImpl.alanTuring
-    val optionProperty: Option[Property] = PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord), Some(userRecord))
+    val maybePropertyRecord: Option[PropertyRecord] = DatabaseImpl.propertiesById.get(4)
+    val userRecord: UserRecord                      = DatabaseImpl.alanTuring
+    val optionProperty: Option[Property]            = PropertyRepositoryImpl.buildPropertyFromRecord(maybePropertyRecord, Some(userRecord))
 
     assert(value)(equalTo(optionProperty))
   }
@@ -80,17 +80,17 @@ object UserRepositorySpec extends ZIOSpecDefault {
   private def assertAllPropertiesOfAlanTuring(values: List[Property]): TestResult = {
     val alanTuringSomeUserRecord: Option[UserRecord] = Some(DatabaseImpl.alanTuring)
 
-    val propertyRecord1: PropertyRecord  = DatabaseImpl.propertiesById(4)
-    val maybeProperty1: Option[Property] =
-      PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord1), alanTuringSomeUserRecord)
+    val maybePropertyRecord1: Option[PropertyRecord] = DatabaseImpl.propertiesById.get(4)
+    val maybeProperty1: Option[Property]             =
+      PropertyRepositoryImpl.buildPropertyFromRecord(maybePropertyRecord1, alanTuringSomeUserRecord)
 
-    val propertyRecord2: PropertyRecord  = DatabaseImpl.propertiesById(5)
-    val maybeProperty2: Option[Property] =
-      PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord2), alanTuringSomeUserRecord)
+    val maybePropertyRecord2: Option[PropertyRecord] = DatabaseImpl.propertiesById.get(5)
+    val maybeProperty2: Option[Property]             =
+      PropertyRepositoryImpl.buildPropertyFromRecord(maybePropertyRecord2, alanTuringSomeUserRecord)
 
-    val propertyRecord3: PropertyRecord  = DatabaseImpl.propertiesById(6)
-    val maybeProperty3: Option[Property] =
-      PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord3), alanTuringSomeUserRecord)
+    val maybePropertyRecord3: Option[PropertyRecord] = DatabaseImpl.propertiesById.get(6)
+    val maybeProperty3: Option[Property]             =
+      PropertyRepositoryImpl.buildPropertyFromRecord(maybePropertyRecord3, alanTuringSomeUserRecord)
 
     (maybeProperty1, maybeProperty2, maybeProperty3) match {
       case (Some(property1), Some(property2), Some(property3)) =>
@@ -103,16 +103,19 @@ object UserRepositorySpec extends ZIOSpecDefault {
     }
   }
 
+  private def failedTestResult: TestResult =
+    assertTrue(false) // fail test
+
   private def assertAllPropertiesOfHaskellCurry(values: List[Property]): TestResult = {
     val haskellCurrySomeUserRecord: Option[UserRecord] = Some(DatabaseImpl.haskellCurry)
 
-    val propertyRecord1: PropertyRecord  = DatabaseImpl.properties(6)
-    val maybeProperty1: Option[Property] =
-      PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord1), haskellCurrySomeUserRecord)
+    val maybePropertyRecord1: Option[PropertyRecord] = DatabaseImpl.propertiesById.get(7)
+    val maybeProperty1: Option[Property]             =
+      PropertyRepositoryImpl.buildPropertyFromRecord(maybePropertyRecord1, haskellCurrySomeUserRecord)
 
-    val propertyRecord2: PropertyRecord  = DatabaseImpl.properties(7)
-    val maybeProperty2: Option[Property] =
-      PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord2), haskellCurrySomeUserRecord)
+    val maybePropertyRecord2: Option[PropertyRecord] = DatabaseImpl.propertiesById.get(8)
+    val maybeProperty2: Option[Property]             =
+      PropertyRepositoryImpl.buildPropertyFromRecord(maybePropertyRecord2, haskellCurrySomeUserRecord)
 
     (maybeProperty1, maybeProperty2) match {
       case (Some(property1), Some(property2)) =>
@@ -123,9 +126,6 @@ object UserRepositorySpec extends ZIOSpecDefault {
         failedTestResult
     }
   }
-
-  private def failedTestResult: TestResult =
-    assertTrue(false) // fail test
 }
 
 class TestConfiguration {
