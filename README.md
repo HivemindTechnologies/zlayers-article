@@ -7,7 +7,7 @@ You can find the [article in this link](http://hivemindtechnologies.com).
 
 ```mermaid
 %%{init: {"flowchart": {"htmlLabels": false}} }%%
-graph TB
+flowchart TB
 subgraph "Application Layer"
     direction LR
     app("Application")
