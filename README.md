@@ -8,7 +8,7 @@ You can find the [article in this link](http://hivemindtechnologies.com).
 This is the main structure of the application in 4 layers, application, service, repository and database layer:
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
 flowchart TB
 subgraph appLayer["Application Layer"]
     direction LR
