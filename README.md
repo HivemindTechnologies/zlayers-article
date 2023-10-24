@@ -5,6 +5,8 @@ You can find the [article in this link](http://hivemindtechnologies.com).
 
 ## Architecture of the Application
 
+This is the main structure of the application in 4 layers, application, service, repository and database layer:
+
 ```mermaid
 %%{init: {'theme': 'neutral'}}%%
 flowchart TB
@@ -32,14 +34,14 @@ subgraph dbLayer["Database Layer"]
     dbLogger["DB Logger"]
 end
 
-app -."findUser()".-> userService -.getUserById().-> userRepo -."getObjectById()".-> database -."SQL query".-> db
+app -. "findUser()" .-> userService -. "getUserById()" .-> userRepo -. "getObjectById()" .-> database -. "SQL query" .-> db
 
-app -."findProperty()".-> propService -.getPropertyById().-> propRepo -."getObjectById()".-> database
+app -. "findProperty()" .-> propService -. "getPropertyById()" .-> propRepo -. "getObjectById()" .-> database
 
-app -."findPropertiesOfUser()".-> propService -.getPropertiesByOwnerId().-> propRepo
+app -. "findPropertiesOfUser()" .-> propService -. "getPropertiesByOwnerId()" .-> propRepo
 
-database -.uses.-> dbLogger
-database -.uses.-> dbConfig
+database -. "uses" .-> dbLogger
+database -. "uses" .-> dbConfig
 ```
 
 
