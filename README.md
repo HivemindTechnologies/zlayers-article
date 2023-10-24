@@ -6,7 +6,7 @@ You can find the [article in this link](http://hivemindtechnologies.com).
 ## Architecture of the Application
 
 ```mermaid
-%%{init: {"flowchart": {"htmlLabels": false}} }%%
+%%{init: {'theme': 'neutral'}}%%
 flowchart TB
 subgraph appLayer["Application Layer"]
     direction LR
