@@ -17,10 +17,8 @@ case class ServiceConnectionError() extends ServiceException {
 
 object ServiceException {
   def handleRepositoryErrors[A](zio: IO[RepositoryException, A], logger: Logger): IO[ServiceException, A] =
-    zio.mapError { case RepositoryConnectionError() =>
-      ServiceConnectionError()
-    }.catchSome { case error: ServiceConnectionError =>
+    zio.catchAll { case error: RepositoryConnectionError =>
       error.logError(logger) *>
-        ZIO.fail[ServiceException](error)
+        ZIO.fail[ServiceException](ServiceConnectionError())
     }
 }

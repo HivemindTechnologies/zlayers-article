@@ -9,7 +9,7 @@ sealed trait DatabaseException extends ApplicationError
 case class DatabaseTimeoutException() extends DatabaseException {
 
   override def logError(logger: Logger): UIO[String] = {
-    val message = "A timeout occurred in the database"
+    val message = "A timeout occurred in the database layer."
     for {
       _ <- logger.log(message, HivemindLogLevel.ERROR)
     } yield message
