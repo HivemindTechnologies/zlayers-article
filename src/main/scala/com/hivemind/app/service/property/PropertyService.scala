@@ -16,8 +16,8 @@ object PropertyService {
   val live: URLayer[Logger with PropertyRepository, PropertyService] =
     ZLayer { // apply == fromZIO
       for {
+        logger         <- ZIO.service[Logger]
         userRepository <- ZIO.service[PropertyRepository]
-        serviceLogger  <- ZIO.service[Logger]
-      } yield PropertyServiceImpl(userRepository, serviceLogger)
+      } yield PropertyServiceImpl(userRepository, logger)
     }
 }
