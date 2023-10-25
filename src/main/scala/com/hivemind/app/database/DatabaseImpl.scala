@@ -53,7 +53,7 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
       isError <- randomErrorUsingGivenProbability
       outcome <- if isError
                  then ZIO.fail(DatabaseQueryExecutionException())
-                 else ZIO.succeed(result)
+                 else logger.log("Query finished successfully.") *> ZIO.succeed(result)
     } yield outcome
 
   private def getRecordById(id: Int, table: TableName): Option[Record] =

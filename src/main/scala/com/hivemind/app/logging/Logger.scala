@@ -23,4 +23,7 @@ object Logger {
       _       <- ZIO.addFinalizer(impl.finalizer)
     } yield impl
   }
+
+  def liveFromFunction: URLayer[Console, Logger] =
+    ZLayer.fromFunction((console: Console) => LoggerImpl(console))
 }
