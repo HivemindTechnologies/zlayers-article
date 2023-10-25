@@ -16,7 +16,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      userRepository <- fixture.repositoryIO
+      userRepository <- fixture.repositoryUIO
       user           <- userRepository.getUserById(1)
     } yield assertAlonzoChurch(user)
   }
@@ -27,7 +27,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
     }
 
     for {
-      userRepository <- fixture.repositoryIO
+      userRepository <- fixture.repositoryUIO
       error          <- userRepository.getUserById(1).flip
     } yield assert(error)(isSubtype[RepositoryException](anything))
   }
@@ -36,7 +36,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      userRepository <- fixture.repositoryIO
+      userRepository <- fixture.repositoryUIO
       user           <- userRepository.getUserById(2)
     } yield assertAlanTuring(user)
   }
@@ -59,14 +59,14 @@ object UserRepositorySpec extends ZIOSpecDefault {
 }
 
 class TestConfiguration {
-  final val neverFail: Double                                    = 0.0
-  final val alwaysFail: Double                                   = 100.0
-  lazy val probabilityOfErrors: Double                           = neverFail
-  lazy val testConfig: Config                                    = Config.testConfig(probabilityOfErrors)
-  val testConfigZLayer: ULayer[Config]                           = ZLayer.succeed(testConfig)
-  val consoleZLayer: ULayer[Console.ConsoleLive.type]            = ZLayer.succeed(zio.Console.ConsoleLive)
-  val userRepositoryZLayer: URIO[UserRepository, UserRepository] = ZIO.service[UserRepository]
+  final val neverFail: Double                                  = 0.0
+  final val alwaysFail: Double                                 = 100.0
+  lazy val probabilityOfErrors: Double                         = neverFail
+  lazy val testConfig: Config                                  = Config.testConfig(probabilityOfErrors)
+  val testConfigZLayer: ULayer[Config]                         = ZLayer.succeed(testConfig)
+  val consoleZLayer: ULayer[Console.ConsoleLive.type]          = ZLayer.succeed(zio.Console.ConsoleLive)
+  val userRepositoryURIO: URIO[UserRepository, UserRepository] = ZIO.service[UserRepository]
 
-  val repositoryIO: UIO[UserRepository] =
-    userRepositoryZLayer.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, UserRepository.live)
+  val repositoryUIO: UIO[UserRepository] =
+    userRepositoryURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, UserRepository.live)
 }

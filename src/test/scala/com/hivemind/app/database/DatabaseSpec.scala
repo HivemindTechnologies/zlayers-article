@@ -14,7 +14,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      db     <- fixture.databaseIO
+      db     <- fixture.databaseUIO
       record <- db.getObjectById(1, TableName.Users)
     } yield assertAlonzoChurch(record)
   }
@@ -25,7 +25,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     }
 
     for {
-      db    <- fixture.databaseIO
+      db    <- fixture.databaseUIO
       error <- db.getObjectById(1, TableName.Users).flip
     } yield assert(error)(isSubtype[DatabaseConnectionClosedException](anything))
   }
@@ -34,7 +34,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      db     <- fixture.databaseIO
+      db     <- fixture.databaseUIO
       record <- db.getObjectById(2, TableName.Users)
     } yield assertAlanTuring(record)
   }
@@ -43,7 +43,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      db     <- fixture.databaseIO
+      db     <- fixture.databaseUIO
       record <- db.getObjectById(1, TableName.Properties)
     } yield assertProperty1(record)
   }
@@ -52,7 +52,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      db     <- fixture.databaseIO
+      db     <- fixture.databaseUIO
       record <- db.getObjectById(2, TableName.Properties)
     } yield assertProperty2(record)
   }
@@ -61,7 +61,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      db            <- fixture.databaseIO
+      db            <- fixture.databaseUIO
       listOfRecords <- db.getAllRecords(TableName.Users)
     } yield assertListOfUsers(listOfRecords)
   }
@@ -70,7 +70,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      db            <- fixture.databaseIO
+      db            <- fixture.databaseUIO
       listOfRecords <- db.getAllRecords(TableName.Properties)
     } yield assertListOfProperties(listOfRecords)
   }
@@ -108,7 +108,7 @@ class TestConfiguration {
   lazy val testConfig: Config                         = Config.testConfig(probabilityOfErrors)
   val testConfigZLayer: ULayer[Config]                = ZLayer.succeed(testConfig)
   val consoleZLayer: ULayer[Console.ConsoleLive.type] = ZLayer.succeed(zio.Console.ConsoleLive)
-  val dbTest: URIO[Database, Database]                = ZIO.service[Database]
+  val dbTestURIO: URIO[Database, Database]            = ZIO.service[Database]
 
-  val databaseIO: UIO[Database] = dbTest.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live)
+  val databaseUIO: UIO[Database] = dbTestURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live)
 }

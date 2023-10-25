@@ -17,7 +17,7 @@ object PropertyServiceSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      propertyService <- fixture.propertyServiceIO
+      propertyService <- fixture.propertyServiceUIO
       property        <- propertyService.findProperty(1)
     } yield assertProperty(userId = 1, propertyId = 1, value = property)
   }
@@ -28,7 +28,7 @@ object PropertyServiceSpec extends ZIOSpecDefault {
     }
 
     for {
-      propertyService <- fixture.propertyServiceIO
+      propertyService <- fixture.propertyServiceUIO
       error           <- propertyService.findProperty(1).flip
     } yield assert(error)(isSubtype[ServiceException](anything))
   }
@@ -37,7 +37,7 @@ object PropertyServiceSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      propertyService <- fixture.propertyServiceIO
+      propertyService <- fixture.propertyServiceUIO
       property        <- propertyService.findProperty(7)
     } yield assertProperty(userId = 3, propertyId = 7, value = property)
   }
@@ -46,7 +46,7 @@ object PropertyServiceSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      propertyService <- fixture.propertyServiceIO
+      propertyService <- fixture.propertyServiceUIO
       properties      <- propertyService.findPropertiesOfUser(1)
     } yield assertProperties(userId = 1, propertyIds = List(1, 2, 3), value = properties)
   }
@@ -55,7 +55,7 @@ object PropertyServiceSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      propertyService <- fixture.propertyServiceIO
+      propertyService <- fixture.propertyServiceUIO
       properties      <- propertyService.findPropertiesOfUser(3)
     } yield assertProperties(userId = 3, propertyIds = List(7, 8), value = properties)
   }
@@ -83,14 +83,14 @@ object PropertyServiceSpec extends ZIOSpecDefault {
 }
 
 class TestConfiguration {
-  final val neverFail: Double                                 = 0.0
-  final val alwaysFail: Double                                = 100.0
-  lazy val probabilityOfErrors: Double                        = neverFail
-  lazy val testConfig: Config                                 = Config.testConfig(probabilityOfErrors)
-  val testConfigZLayer: ULayer[Config]                        = ZLayer.succeed(testConfig)
-  val consoleZLayer: ULayer[Console.ConsoleLive.type]         = ZLayer.succeed(zio.Console.ConsoleLive)
-  val propertyService: URIO[PropertyService, PropertyService] = ZIO.service[PropertyService]
+  final val neverFail: Double                                     = 0.0
+  final val alwaysFail: Double                                    = 100.0
+  lazy val probabilityOfErrors: Double                            = neverFail
+  lazy val testConfig: Config                                     = Config.testConfig(probabilityOfErrors)
+  val testConfigZLayer: ULayer[Config]                            = ZLayer.succeed(testConfig)
+  val consoleZLayer: ULayer[Console.ConsoleLive.type]             = ZLayer.succeed(zio.Console.ConsoleLive)
+  val propertyServiceURIO: URIO[PropertyService, PropertyService] = ZIO.service[PropertyService]
 
-  val propertyServiceIO: UIO[PropertyService] =
-    propertyService.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, PropertyRepository.live, PropertyService.live)
+  val propertyServiceUIO: UIO[PropertyService] =
+    propertyServiceURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, PropertyRepository.live, PropertyService.live)
 }

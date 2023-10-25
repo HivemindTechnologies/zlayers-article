@@ -7,14 +7,14 @@ trait Logger {
 }
 
 object Logger {
-//  val live: URLayer[Console, Logger] = ZLayer {
-//    for {
-//      console <- ZIO.succeed(Console.ConsoleLive)
-//      impl    <- ZIO.succeed(LoggerImpl(console))
-//    } yield impl
-//  }
+  val live: URLayer[Console, Logger] = ZLayer {
+    for {
+      console <- ZIO.service[Console]
+      impl    <- ZIO.succeed(LoggerImpl(console))
+    } yield impl
+  }
 
-  val live: URLayer[Console, Logger] = ZLayer.scoped {
+  val liveWithLineCounter: URLayer[Console, Logger] = ZLayer.scoped {
     for {
       ref     <- Ref.make(0)
       console <- ZIO.service[Console]

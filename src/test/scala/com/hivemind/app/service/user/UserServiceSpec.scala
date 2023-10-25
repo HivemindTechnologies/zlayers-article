@@ -17,7 +17,7 @@ object UserServiceSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      userService <- fixture.userServiceIO
+      userService <- fixture.userServiceUIO
       user        <- userService.findUser(1)
     } yield assertAlonzoChurch(user)
   }
@@ -28,7 +28,7 @@ object UserServiceSpec extends ZIOSpecDefault {
     }
 
     for {
-      userService <- fixture.userServiceIO
+      userService <- fixture.userServiceUIO
       error       <- userService.findUser(1).flip
     } yield assert(error)(isSubtype[ServiceException](anything))
   }
@@ -37,7 +37,7 @@ object UserServiceSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      userService <- fixture.userServiceIO
+      userService <- fixture.userServiceUIO
       user        <- userService.findUser(2)
     } yield assertAlanTuring(user)
   }
@@ -66,8 +66,8 @@ class TestConfiguration {
   lazy val testConfig: Config                         = Config.testConfig(probabilityOfErrors)
   val testConfigZLayer: ULayer[Config]                = ZLayer.succeed(testConfig)
   val consoleZLayer: ULayer[Console.ConsoleLive.type] = ZLayer.succeed(zio.Console.ConsoleLive)
-  val userService: URIO[UserService, UserService]     = ZIO.service[UserService]
+  val userServiceURIO: URIO[UserService, UserService] = ZIO.service[UserService]
 
-  val userServiceIO: UIO[UserService] =
-    userService.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, UserRepository.live, UserService.live)
+  val userServiceUIO: UIO[UserService] =
+    userServiceURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, UserRepository.live, UserService.live)
 }

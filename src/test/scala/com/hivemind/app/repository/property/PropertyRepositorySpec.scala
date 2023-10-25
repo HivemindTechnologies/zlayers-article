@@ -16,7 +16,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      propertyRepository <- fixture.repositoryIO
+      propertyRepository <- fixture.repositoryUIO
       property           <- propertyRepository.getPropertyById(1)
     } yield assertAlonzoChurchCar(property)
   }
@@ -27,7 +27,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
     }
 
     for {
-      propertyRepository <- fixture.repositoryIO
+      propertyRepository <- fixture.repositoryUIO
       error              <- propertyRepository.getPropertyById(1).flip
     } yield assert(error)(isSubtype[RepositoryException](anything))
   }
@@ -36,7 +36,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      propertyRepository <- fixture.repositoryIO
+      propertyRepository <- fixture.repositoryUIO
       user               <- propertyRepository.getPropertyById(4)
     } yield assertAlanTuringHouse(user)
   }
@@ -45,7 +45,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      propertyRepository <- fixture.repositoryIO
+      propertyRepository <- fixture.repositoryUIO
       properties         <- propertyRepository.getPropertiesByOwnerId(2)
     } yield assertAllPropertiesOfAlanTuring(properties)
   }
@@ -54,7 +54,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      propertyRepository <- fixture.repositoryIO
+      propertyRepository <- fixture.repositoryUIO
       properties         <- propertyRepository.getPropertiesByOwnerId(3)
     } yield assertAllPropertiesOfHaskellCurry(properties)
   }
@@ -129,14 +129,14 @@ object UserRepositorySpec extends ZIOSpecDefault {
 }
 
 class TestConfiguration {
-  final val neverFail: Double                                            = 0.0
-  final val alwaysFail: Double                                           = 100.0
-  lazy val probabilityOfErrors: Double                                   = neverFail
-  lazy val testConfig: Config                                            = Config.testConfig(probabilityOfErrors)
-  val testConfigZLayer: ULayer[Config]                                   = ZLayer.succeed(testConfig)
-  val consoleZLayer: ULayer[Console.ConsoleLive.type]                    = ZLayer.succeed(zio.Console.ConsoleLive)
-  val userRepositoryZLayer: URIO[PropertyRepository, PropertyRepository] = ZIO.service[PropertyRepository]
+  final val neverFail: Double                                          = 0.0
+  final val alwaysFail: Double                                         = 100.0
+  lazy val probabilityOfErrors: Double                                 = neverFail
+  lazy val testConfig: Config                                          = Config.testConfig(probabilityOfErrors)
+  val testConfigZLayer: ULayer[Config]                                 = ZLayer.succeed(testConfig)
+  val consoleZLayer: ULayer[Console.ConsoleLive.type]                  = ZLayer.succeed(zio.Console.ConsoleLive)
+  val userRepositoryURIO: URIO[PropertyRepository, PropertyRepository] = ZIO.service[PropertyRepository]
 
-  val repositoryIO: UIO[PropertyRepository] =
-    userRepositoryZLayer.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, PropertyRepository.live)
+  val repositoryUIO: UIO[PropertyRepository] =
+    userRepositoryURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, PropertyRepository.live)
 }

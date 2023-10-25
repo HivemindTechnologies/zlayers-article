@@ -1,5 +1,6 @@
 package com.hivemind.app.service.property
 
+import com.hivemind.app.logging.Logger
 import com.hivemind.app.model.Property
 import com.hivemind.app.repository.property.PropertyRepository
 import com.hivemind.app.service.exception.ServiceException
@@ -12,10 +13,11 @@ trait PropertyService {
 
 object PropertyService {
 
-  val live: URLayer[PropertyRepository, PropertyService] =
+  val live: URLayer[Logger with PropertyRepository, PropertyService] =
     ZLayer { // apply == fromZIO
       for {
         userRepository <- ZIO.service[PropertyRepository]
-      } yield PropertyServiceImpl(userRepository)
+        serviceLogger  <- ZIO.service[Logger]
+      } yield PropertyServiceImpl(userRepository, serviceLogger)
     }
 }
