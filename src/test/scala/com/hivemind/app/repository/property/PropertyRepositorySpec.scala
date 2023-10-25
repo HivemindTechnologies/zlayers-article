@@ -62,9 +62,10 @@ object UserRepositorySpec extends ZIOSpecDefault {
   def spec: Spec[TestEnvironment with Scope, Any] = suite("Property repository")(test1, test2, test3, test4, test5)
 
   private def assertAlonzoChurchCar(value: Option[Property]): TestResult = {
-    val propertyRecord: PropertyRecord   = DatabaseImpl.properties.head
-    val userRecord: UserRecord           = DatabaseImpl.alonzoChurch
-    val optionProperty: Option[Property] = PropertyRepositoryImpl.buildPropertyFromRecord(Some(propertyRecord), Some(userRecord))
+    val maybePropertyRecord: Option[PropertyRecord] = DatabaseImpl.propertiesById.get(1)
+    val userRecord: UserRecord                      = DatabaseImpl.alonzoChurch
+
+    val optionProperty: Option[Property] = PropertyRepositoryImpl.buildPropertyFromRecord(maybePropertyRecord, Some(userRecord))
 
     assert(value)(equalTo(optionProperty))
   }

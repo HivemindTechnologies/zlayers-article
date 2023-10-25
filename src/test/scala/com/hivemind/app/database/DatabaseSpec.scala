@@ -72,7 +72,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     for {
       db            <- fixture.databaseUIO
       listOfRecords <- db.getAllRecords(TableName.Properties)
-    } yield assertListOfProperties(listOfRecords)
+    } yield assert(listOfRecords)(hasSize(equalTo(8)))
   }
 
   def spec: Spec[TestEnvironment with Scope, Any] = suite("Database implementation")(test1, test2, test3, test4, test5, test6, test7)
@@ -94,21 +94,17 @@ object DatabaseSpec extends ZIOSpecDefault {
     assert(values)(hasAt(0)(equalTo(DatabaseImpl.alonzoChurch))) &&
     assert(values)(hasAt(1)(equalTo(DatabaseImpl.alanTuring))) &&
     assert(values)(hasAt(2)(equalTo(DatabaseImpl.haskellCurry)))
-
-  private def assertListOfProperties(values: List[Record]): TestResult =
-    assert(values)(hasSize(equalTo(8))) &&
-    assert(values)(equalTo(DatabaseImpl.properties))
-
 }
 
 class TestConfiguration {
-  final val neverFail: Double                         = 0.0
-  final val alwaysFail: Double                        = 100.0
-  lazy val probabilityOfErrors: Double                = neverFail
-  lazy val testConfig: Config                         = Config.testConfig(probabilityOfErrors)
-  val testConfigZLayer: ULayer[Config]                = ZLayer.succeed(testConfig)
-  val consoleZLayer: ULayer[Console.ConsoleLive.type] = ZLayer.succeed(zio.Console.ConsoleLive)
-  val dbTestURIO: URIO[Database, Database]            = ZIO.service[Database]
+  final val neverFail: Double          = 0.0
+  final val alwaysFail: Double         = 100.0
+  lazy val probabilityOfErrors: Double = neverFail
+
+  lazy val testConfig: Config              = Config.testConfig(probabilityOfErrors)
+  val testConfigZLayer: ULayer[Config]     = ZLayer.succeed(testConfig)
+  val consoleZLayer: ULayer[Console]       = ZLayer.succeed(Console.ConsoleLive)
+  val dbTestURIO: URIO[Database, Database] = ZIO.service[Database]
 
   val databaseUIO: UIO[Database] = dbTestURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live)
 }

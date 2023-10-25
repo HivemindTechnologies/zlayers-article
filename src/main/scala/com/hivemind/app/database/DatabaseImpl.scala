@@ -91,17 +91,7 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
 }
 
 object DatabaseImpl {
-  val alonzoChurch: UserRecord = UserRecord(id = 1, name = "Alonzo", surname = "Church", age = 33)
-  val alanTuring: UserRecord   = UserRecord(id = 2, name = "Alan", surname = "Turing", age = 30)
-  val haskellCurry: UserRecord = UserRecord(id = 3, name = "Haskell", surname = "Curry", age = 46)
-
-  val usersById: Map[Int, UserRecord]  =
-    HashMap(
-      1 -> alonzoChurch,
-      2 -> alanTuring,
-      3 -> haskellCurry,
-    )
-  val properties: List[PropertyRecord] = List(
+  private lazy val properties: List[PropertyRecord] = List(
     PropertyRecord(id = 1, propertyType = "Car", price = 17800, owner = 1),
     PropertyRecord(id = 2, propertyType = "House", price = 230500, owner = 1),
     PropertyRecord(id = 3, propertyType = "Boat", price = 180000, owner = 1),
@@ -111,6 +101,17 @@ object DatabaseImpl {
     PropertyRecord(id = 7, propertyType = "House", price = 124900, owner = 3),
     PropertyRecord(id = 8, propertyType = "Car", price = 6500, owner = 3),
   )
+
+  val alonzoChurch: UserRecord = UserRecord(id = 1, name = "Alonzo", surname = "Church", age = 33)
+  val alanTuring: UserRecord   = UserRecord(id = 2, name = "Alan", surname = "Turing", age = 30)
+  val haskellCurry: UserRecord = UserRecord(id = 3, name = "Haskell", surname = "Curry", age = 46)
+
+  val usersById: Map[Int, UserRecord] =
+    HashMap(
+      1 -> alonzoChurch,
+      2 -> alanTuring,
+      3 -> haskellCurry,
+    )
 
   val propertiesById: Map[Int, PropertyRecord] =
     properties.zipWithIndex.map((property: PropertyRecord, index: Int) => properties(index).id -> properties(index)).toMap
