@@ -1,19 +1,20 @@
 package com.hivemind.app.repository.property
 
 import com.hivemind.app.database.Database
-import com.hivemind.app.database.exception.{DatabaseConnectionClosedException, DatabaseException, DatabaseQueryExecutionException, DatabaseTimeoutException}
 import com.hivemind.app.database.model.{PropertyRecord, Record, TableName, UserRecord}
+import com.hivemind.app.logging.Logger
 import com.hivemind.app.model.{Property, PropertyType}
-import com.hivemind.app.repository.exception.{RepositoryConnectionError, RepositoryException}
+import com.hivemind.app.repository.exception.RepositoryException
+import com.hivemind.app.repository.exception.RepositoryException.handleDatabaseErrors
 import com.hivemind.app.repository.property.PropertyRepositoryImpl.buildPropertyFromRecord
 import com.hivemind.app.repository.user.UserRepositoryImpl.*
 import zio.{IO, ZIO}
 
-class PropertyRepositoryImpl(database: Database) extends PropertyRepository {
+class PropertyRepositoryImpl(database: Database, logger: Logger) extends PropertyRepository {
 
   override def getPropertyById(id: Int): IO[RepositoryException, Option[Property]] =
     for {
-      maybeRecord        <- database.getObjectById(id, TableName.Properties).mapError(mapErrors)
+      maybeRecord        <- handleDatabaseErrors(database.getObjectById(id, TableName.Properties), logger)
       maybePropertyRecord = maybeRecord.fold(Option.empty[PropertyRecord])((record: Record) => record.toPropertyRecord)
       maybeUserRecord    <- getUserOfProperty(maybePropertyRecord)
     } yield buildPropertyFromRecord(maybePropertyRecord, maybeUserRecord)
@@ -23,27 +24,18 @@ class PropertyRepositoryImpl(database: Database) extends PropertyRepository {
 
     maybePropertyRecord.fold(emptyUserRecordZIO) { (propertyRecord: PropertyRecord) =>
       for {
-        maybeRecord     <- database.getObjectById(propertyRecord.owner, TableName.Users).mapError(mapErrors)
+        maybeRecord     <- handleDatabaseErrors(database.getObjectById(propertyRecord.owner, TableName.Users), logger)
         maybeUserRecord <- maybeRecord.fold(emptyUserRecordZIO)((record: Record) => ZIO.succeed(record.toUserRecord))
         userRecord      <- maybeUserRecord.fold(emptyUserRecordZIO)((userRecord: UserRecord) => ZIO.succeed(userRecord))
       } yield maybeUserRecord
     }
   }
 
-  private def mapErrors(error: DatabaseException): RepositoryException = error match {
-    case DatabaseTimeoutException(logger)          =>
-      RepositoryConnectionError
-    case DatabaseQueryExecutionException(logger)   =>
-      RepositoryConnectionError
-    case DatabaseConnectionClosedException(logger) =>
-      RepositoryConnectionError
-  }
-
   override def getPropertiesByOwnerId(userId: Int): IO[RepositoryException, List[Property]] =
     for {
-      maybeRecord            <- database.getObjectById(userId, TableName.Users).mapError(mapErrors)
+      maybeRecord            <- handleDatabaseErrors(database.getObjectById(userId, TableName.Users), logger)
       maybeUserRecord         = maybeRecord.flatMap((record: Record) => record.toUserRecord)
-      allRecords             <- database.getAllRecords(TableName.Properties).mapError(mapErrors)
+      allRecords             <- handleDatabaseErrors(database.getAllRecords(TableName.Properties), logger)
       propertyRecordsFiltered = allRecords.filter { (record: Record) =>
                                   val maybePropertyRecord = record.toPropertyRecord
                                   maybePropertyRecord.fold(false)((propertyRecord: PropertyRecord) => propertyRecord.owner == userId)

@@ -1,17 +1,26 @@
 package com.hivemind.app.service.exception
 
+import com.hivemind.app.logging.{HivemindLogLevel, Logger}
 import com.hivemind.app.model.ApplicationError
-import zio.{Console, UIO}
+import com.hivemind.app.repository.exception.{RepositoryConnectionError, RepositoryException}
+import zio.{IO, UIO, ZIO}
 
-sealed trait ServiceException extends ApplicationError {
-  override def logError(): UIO[String] =
-    this match {
-      case ServiceConnectionError =>
-        val message = s"A connection exception occurred in the service layer."
-        for {
-          _ <- Console.printLine(message).ignore
-        } yield message
-    }
+sealed trait ServiceException extends ApplicationError
+
+case class ServiceConnectionError() extends ServiceException {
+  override def logError(logger: Logger): UIO[String] =
+    val message = "A connection exception occurred in the service layer."
+    for {
+      _ <- logger.log(message, HivemindLogLevel.ERROR)
+    } yield message
 }
 
-case object ServiceConnectionError extends ServiceException
+object ServiceException {
+  def handleRepositoryErrors[A](zio: IO[RepositoryException, A], logger: Logger): IO[ServiceException, A] =
+    zio.mapError { case RepositoryConnectionError() =>
+      ServiceConnectionError()
+    }.catchSome { case error: ServiceConnectionError =>
+      error.logError(logger) *>
+        ZIO.fail[ServiceException](error)
+    }
+}

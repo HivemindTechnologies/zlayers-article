@@ -4,23 +4,17 @@ import com.hivemind.app.logging.Logger
 import com.hivemind.app.model.Property
 import com.hivemind.app.repository.exception.{RepositoryConnectionError, RepositoryException}
 import com.hivemind.app.repository.property.PropertyRepository
+import com.hivemind.app.service.exception.ServiceException.handleRepositoryErrors
 import com.hivemind.app.service.exception.{ServiceConnectionError, ServiceException}
 import zio.{IO, ZIO}
 
-class PropertyServiceImpl(propertyRepository: PropertyRepository, serviceLogger: Logger) extends PropertyService {
+class PropertyServiceImpl(propertyRepository: PropertyRepository, logger: Logger) extends PropertyService {
   override def findPropertiesOfUser(userId: Int): IO[ServiceException, Set[Property]] =
     for {
-      list <- handleRepositoryErrors(propertyRepository.getPropertiesByOwnerId(userId = userId))
+      list <- handleRepositoryErrors(propertyRepository.getPropertiesByOwnerId(userId = userId), logger)
     } yield list.toSet
 
-  private def handleRepositoryErrors[A](zio: IO[RepositoryException, A]): IO[ServiceException, A] =
-    zio.mapError { case RepositoryConnectionError =>
-      ServiceConnectionError
-    }.catchSome { case s: ServiceException =>
-      s.logError() *>
-        ZIO.fail(s)
-    }
-
   override def findProperty(propertyId: Int): IO[ServiceException, Option[Property]] =
-    handleRepositoryErrors(propertyRepository.getPropertyById(propertyId = propertyId))
+    handleRepositoryErrors(propertyRepository.getPropertyById(propertyId = propertyId), logger)
+
 }

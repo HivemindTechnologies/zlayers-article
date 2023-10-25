@@ -29,32 +29,32 @@ class DatabaseImpl(parameters: DatabaseParameters, logger: Logger) extends Datab
   private def checkConnectionAlive(connection: DatabaseConnection): IO[DatabaseException, Unit] =
     if connection.isAlive
     then ZIO.unit
-    else ZIO.fail(DatabaseConnectionClosedException(logger))
+    else ZIO.fail(DatabaseConnectionClosedException())
 
   private def simulateExecutionTime: IO[DatabaseException, Unit] = {
     val result = for {
       shouldFail <- randomErrorUsingGivenProbability
       outcome    <- if shouldFail
-                    then ZIO.fail(DatabaseTimeoutException(logger))
+                    then ZIO.fail(DatabaseTimeoutException())
                     else ZIO.unit
     } yield outcome
 
     result
   }
 
-  private def simulateRetrieveResults[A, M[_]](result: M[A]): IO[DatabaseException, M[A]] =
-    for {
-      isError <- randomErrorUsingGivenProbability
-      outcome <- if isError
-                 then ZIO.fail(DatabaseQueryExecutionException(logger))
-                 else ZIO.succeed(result)
-    } yield outcome
-
   private def randomErrorUsingGivenProbability: UIO[Boolean] =
     for {
       double  <- ZIO.succeed(scalaNextDouble(0.0, 100.0))
       isError <- ZIO.succeed(double < probabilityOfError)
     } yield isError
+
+  private def simulateRetrieveResults[A, M[_]](result: M[A]): IO[DatabaseException, M[A]] =
+    for {
+      isError <- randomErrorUsingGivenProbability
+      outcome <- if isError
+                 then ZIO.fail(DatabaseQueryExecutionException())
+                 else ZIO.succeed(result)
+    } yield outcome
 
   private def getRecordById(id: Int, table: TableName): Option[Record] =
     table match {
