@@ -22,7 +22,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
     } yield assertAlonzoChurch(user)
   }
 
-  val test2: Spec[Any, Option[User]] = test("returns an exception when getUserById is executed (if probability of errors is 100%)") {
+  val test2: Spec[Any, Option[User]] = test("fails with RepositoryException when outcome is raise query exeption") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseQueryExecutionError
     }

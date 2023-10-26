@@ -18,8 +18,9 @@ case class RepositoryConnectionError() extends RepositoryException {
 object RepositoryException {
 
   def handleDatabaseErrors[A](zio: IO[DatabaseException, A], logger: Logger): IO[RepositoryException, A] =
-    zio.catchAll { case error: DatabaseException =>
-      error.logError(logger) *>
-        ZIO.fail[RepositoryException](RepositoryConnectionError())
+    zio.catchAll { case _: DatabaseException =>
+      val repositoryError = RepositoryConnectionError()
+      repositoryError.logError(logger) *>
+        ZIO.fail[RepositoryException](repositoryError)
     }
 }

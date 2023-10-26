@@ -1,12 +1,7 @@
 package com.hivemind.app.database
 
 import com.hivemind.app.config.Config
-import com.hivemind.app.database.exception.{
-  DatabaseConnectionClosedException,
-  DatabaseException,
-  DatabaseLayerExecutionOutcome,
-  DatabaseQueryExecutionException,
-}
+import com.hivemind.app.database.exception.*
 import com.hivemind.app.database.model.{Record, TableName}
 import com.hivemind.app.logging.Logger
 import zio.*
@@ -15,7 +10,7 @@ import zio.test.Assertion.*
 
 object DatabaseSpec extends ZIOSpecDefault {
 
-  val testError1: Spec[Scope, Option[Record]] = test("fails with connection exception when outcome is connection closed error") {
+  val testError1: Spec[Scope, Option[Record]] = test("fails with connection closed exception when outcome is connection closed error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseConnectionClosedError
     }
@@ -39,13 +34,13 @@ object DatabaseSpec extends ZIOSpecDefault {
 
   val testError3: Spec[Scope, Option[Record]] = test("fails with timeout exception when outcome is timeout error") {
     val fixture = new TestConfiguration {
-      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseConnectionClosedError
+      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseTimeoutError
     }
 
     for {
       db    <- fixture.databaseUIO
       error <- db.getObjectById(1, TableName.Users).flip
-    } yield assert(error)(isSubtype[DatabaseConnectionClosedException](anything))
+    } yield assert(error)(isSubtype[DatabaseTimeoutException](anything))
   }
 
   val test1: Spec[Scope, DatabaseException] = test("returns Alonzo Church record when getObjectById is executed") {
@@ -132,7 +127,7 @@ class TestConfiguration {
   val dbTestURIO: URIO[Database, Database]        = ZIO.service[Database]
 
   val databaseUIO: URIO[Scope, Database] =
-//    dbTestURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live)
-    //  To use the counter logger implementation, uncomment the next line:
-    dbTestURIO.provideSome[Scope](consoleZLayer, testConfigZLayer, Logger.liveWithLineCounter, Database.live)
+    dbTestURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live)
+    // To use the counter logger implementation, uncomment the next line:
+    // dbTestURIO.provideSome[Scope](consoleZLayer, testConfigZLayer, Logger.liveWithLineCounter, Database.live)
 }
