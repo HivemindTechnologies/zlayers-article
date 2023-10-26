@@ -1,6 +1,7 @@
 package com.hivemind.app.repository.user
 
 import com.hivemind.app.config.Config
+import com.hivemind.app.database.exception.DatabaseLayerExecutionOutcome
 import com.hivemind.app.database.model.*
 import com.hivemind.app.database.{Database, DatabaseImpl}
 import com.hivemind.app.logging.Logger
@@ -23,7 +24,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
 
   val test2: Spec[Any, Option[User]] = test("returns an exception when getUserById is executed (if probability of errors is 100%)") {
     val fixture = new TestConfiguration {
-      override lazy val probabilityOfErrors: Double = 100.0
+      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseQueryExecutionError
     }
 
     for {
@@ -59,10 +60,8 @@ object UserRepositorySpec extends ZIOSpecDefault {
 }
 
 class TestConfiguration {
-  final val neverFail: Double                                  = 0.0
-  final val alwaysFail: Double                                 = 100.0
-  lazy val probabilityOfErrors: Double                         = neverFail
-  lazy val testConfig: Config                                  = Config.testConfig(probabilityOfErrors)
+  lazy val outcome: DatabaseLayerExecutionOutcome              = DatabaseLayerExecutionOutcome.FinishWithoutErrors
+  lazy val testConfig: Config                                  = Config.testConfig(outcome = outcome)
   val testConfigZLayer: ULayer[Config]                         = ZLayer.succeed(testConfig)
   val consoleZLayer: ULayer[Console.ConsoleLive.type]          = ZLayer.succeed(zio.Console.ConsoleLive)
   val userRepositoryURIO: URIO[UserRepository, UserRepository] = ZIO.service[UserRepository]

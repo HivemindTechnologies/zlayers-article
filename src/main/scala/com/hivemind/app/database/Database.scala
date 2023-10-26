@@ -14,9 +14,8 @@ trait Database {
 object Database {
   val live: URLayer[Logger with Config, Database] = ZLayer {
     for {
-      logger       <- ZIO.service[Logger]
-      config       <- ZIO.service[Config]
-      databaseImpl <- ZIO.succeed(DatabaseImpl(config.databaseParameters, logger))
-    } yield databaseImpl
+      logger <- ZIO.service[Logger]
+      config <- ZIO.service[Config]
+    } yield DatabaseImpl(config.databaseParameters, logger)
   }
 }

@@ -1,17 +1,24 @@
 package com.hivemind.app.config
 
+import com.hivemind.app.database.exception.{DatabaseException, DatabaseLayerExecutionOutcome}
 import zio.{ULayer, ZLayer}
 
 case class Config(databaseParameters: DatabaseParameters)
 
 object Config {
-  val live: ULayer[Config]                   =
-    ZLayer.succeed(
-      Config(databaseParameters = myDBParams),
+  private lazy val liveDBParams: DatabaseParameters =
+    DatabaseParameters(
+      databaseName = "myMemoryDB",
+      databasePassword = "password",
+      maxConnections = 5,
+      outcome = DatabaseLayerExecutionOutcome.FinishWithoutErrors,
     )
-  private val myDBParams: DatabaseParameters =
-    DatabaseParameters(databaseName = "myMemoryDB", databasePassword = "password", maxConnections = 5, probabilityOfError = 10.0)
 
-  def testConfig(probabilityOfErrors: Double): Config =
-    Config(DatabaseParameters.testParameters(probabilityOfErrors))
+  val live: ULayer[Config] =
+    ZLayer.succeed(
+      Config(databaseParameters = liveDBParams),
+    )
+
+  def testConfig(outcome: DatabaseLayerExecutionOutcome): Config =
+    Config(DatabaseParameters.testParameters(outcome))
 }

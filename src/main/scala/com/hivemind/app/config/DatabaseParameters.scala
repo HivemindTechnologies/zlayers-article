@@ -1,8 +1,15 @@
 package com.hivemind.app.config
 
-case class DatabaseParameters(databaseName: String, databasePassword: String, maxConnections: Int, probabilityOfError: Double)
+import com.hivemind.app.database.exception.{DatabaseException, DatabaseLayerExecutionOutcome}
+
+case class DatabaseParameters(
+  databaseName: String,
+  databasePassword: String,
+  maxConnections: Int,
+  outcome: DatabaseLayerExecutionOutcome,
+)
 
 object DatabaseParameters {
-  def testParameters(probabilityOfErrors: Double): DatabaseParameters =
-    DatabaseParameters("myDB", "password", 5, probabilityOfError = probabilityOfErrors)
+  def testParameters(outcome: DatabaseLayerExecutionOutcome): DatabaseParameters =
+    DatabaseParameters("myDB", "password", 5, outcome = outcome)
 }
