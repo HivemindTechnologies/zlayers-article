@@ -22,7 +22,16 @@ object UserRepositorySpec extends ZIOSpecDefault {
     } yield assertAlonzoChurch(user)
   }
 
-  val test2: Spec[Any, Option[User]] = test("fails with RepositoryException when outcome is raise query exeption") {
+  val test2: Spec[Any, RepositoryException] = test("returns Alan Turing when getUserById is executed") {
+    val fixture = new TestConfiguration
+
+    for {
+      userRepository <- fixture.repositoryUIO
+      user           <- userRepository.getUserById(2)
+    } yield assertAlanTuring(user)
+  }
+
+  val testError1: Spec[Any, Option[User]] = test("fails with RepositoryException when outcome is set to query error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseQueryExecutionError
     }
@@ -33,16 +42,29 @@ object UserRepositorySpec extends ZIOSpecDefault {
     } yield assert(error)(isSubtype[RepositoryException](anything))
   }
 
-  val test3: Spec[Any, RepositoryException] = test("returns Alan Turing when getUserById is executed") {
-    val fixture = new TestConfiguration
+  val testError2: Spec[Any, Option[User]] = test("fails with RepositoryException when outcome is set to connection error") {
+    val fixture = new TestConfiguration {
+      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseConnectionClosedError
+    }
 
     for {
       userRepository <- fixture.repositoryUIO
-      user           <- userRepository.getUserById(2)
-    } yield assertAlanTuring(user)
+      error          <- userRepository.getUserById(1).flip
+    } yield assert(error)(isSubtype[RepositoryException](anything))
   }
 
-  def spec: Spec[TestEnvironment with Scope, Any] = suite("User repository")(test1, test2, test3)
+  val testError3: Spec[Any, Option[User]] = test("fails with RepositoryException when outcome is set to timeout error") {
+    val fixture = new TestConfiguration {
+      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseTimeoutError
+    }
+
+    for {
+      userRepository <- fixture.repositoryUIO
+      error          <- userRepository.getUserById(1).flip
+    } yield assert(error)(isSubtype[RepositoryException](anything))
+  }
+
+  def spec: Spec[TestEnvironment with Scope, Any] = suite("User repository")(test1, test2, testError1, testError2, testError3)
 
   private def assertAlonzoChurch(value: Option[User]): TestResult = {
     val record: UserRecord       = DatabaseImpl.alonzoChurch

@@ -10,39 +10,6 @@ import zio.test.Assertion.*
 
 object DatabaseSpec extends ZIOSpecDefault {
 
-  val testError1: Spec[Scope, Option[Record]] = test("fails with connection closed exception when outcome is connection closed error") {
-    val fixture = new TestConfiguration {
-      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseConnectionClosedError
-    }
-
-    for {
-      db    <- fixture.databaseUIO
-      error <- db.getObjectById(1, TableName.Users).flip
-    } yield assert(error)(isSubtype[DatabaseConnectionClosedException](anything))
-  }
-
-  val testError2: Spec[Scope, Option[Record]] = test("fails with query exception when outcome is query error") {
-    val fixture = new TestConfiguration {
-      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseQueryExecutionError
-    }
-
-    for {
-      db    <- fixture.databaseUIO
-      error <- db.getObjectById(1, TableName.Users).flip
-    } yield assert(error)(isSubtype[DatabaseQueryExecutionException](anything))
-  }
-
-  val testError3: Spec[Scope, Option[Record]] = test("fails with timeout exception when outcome is timeout error") {
-    val fixture = new TestConfiguration {
-      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseTimeoutError
-    }
-
-    for {
-      db    <- fixture.databaseUIO
-      error <- db.getObjectById(1, TableName.Users).flip
-    } yield assert(error)(isSubtype[DatabaseTimeoutException](anything))
-  }
-
   val test1: Spec[Scope, DatabaseException] = test("returns Alonzo Church record when getObjectById is executed") {
     val fixture = new TestConfiguration
 
@@ -95,6 +62,39 @@ object DatabaseSpec extends ZIOSpecDefault {
       db            <- fixture.databaseUIO
       listOfRecords <- db.getAllRecords(TableName.Properties)
     } yield assert(listOfRecords)(hasSize(equalTo(8)))
+  }
+
+  val testError1: Spec[Scope, Option[Record]] = test("fails with DatabaseConnectionClosedException when outcome is set to connection error") {
+    val fixture = new TestConfiguration {
+      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseConnectionClosedError
+    }
+
+    for {
+      db    <- fixture.databaseUIO
+      error <- db.getObjectById(1, TableName.Users).flip
+    } yield assert(error)(isSubtype[DatabaseConnectionClosedException](anything))
+  }
+
+  val testError2: Spec[Scope, Option[Record]] = test("fails with DatabaseQueryExecutionException when outcome is set to query error") {
+    val fixture = new TestConfiguration {
+      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseQueryExecutionError
+    }
+
+    for {
+      db    <- fixture.databaseUIO
+      error <- db.getObjectById(1, TableName.Users).flip
+    } yield assert(error)(isSubtype[DatabaseQueryExecutionException](anything))
+  }
+
+  val testError3: Spec[Scope, Option[Record]] = test("fails with DatabaseTimeoutException when outcome is set to timeout error") {
+    val fixture = new TestConfiguration {
+      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseTimeoutError
+    }
+
+    for {
+      db    <- fixture.databaseUIO
+      error <- db.getObjectById(1, TableName.Users).flip
+    } yield assert(error)(isSubtype[DatabaseTimeoutException](anything))
   }
 
   def spec: Spec[TestEnvironment with Scope, Any] =

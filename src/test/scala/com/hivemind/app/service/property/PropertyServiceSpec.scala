@@ -23,7 +23,34 @@ object PropertyServiceSpec extends ZIOSpecDefault {
     } yield assertProperty(userId = 1, propertyId = 1, value = property)
   }
 
-  val test2: Spec[Any, Option[Property]] = test("returns an exception when findProperty is executed  (if probability of errors is 100%)") {
+  val test2: Spec[Any, ServiceException] = test("returns the property with id 7 when findProperty is executed") {
+    val fixture = new TestConfiguration
+
+    for {
+      propertyService <- fixture.propertyServiceUIO
+      property        <- propertyService.findProperty(7)
+    } yield assertProperty(userId = 3, propertyId = 7, value = property)
+  }
+
+  val test3: Spec[Any, ServiceException] = test("returns the properties of Alonzo Church when findPropertiesOfUser is executed") {
+    val fixture = new TestConfiguration
+
+    for {
+      propertyService <- fixture.propertyServiceUIO
+      properties      <- propertyService.findPropertiesOfUser(1)
+    } yield assertProperties(userId = 1, propertyIds = List(1, 2, 3), value = properties)
+  }
+
+  val test4: Spec[Any, ServiceException] = test("returns the properties of Haskell Curry when findPropertiesOfUser is executed") {
+    val fixture = new TestConfiguration
+
+    for {
+      propertyService <- fixture.propertyServiceUIO
+      properties      <- propertyService.findPropertiesOfUser(3)
+    } yield assertProperties(userId = 3, propertyIds = List(7, 8), value = properties)
+  }
+
+  val testError1: Spec[Any, Option[Property]] = test("fails with ServiceException when outcome is set to query error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseQueryExecutionError
     }
@@ -34,34 +61,29 @@ object PropertyServiceSpec extends ZIOSpecDefault {
     } yield assert(error)(isSubtype[ServiceException](anything))
   }
 
-  val test3: Spec[Any, ServiceException] = test("returns the property with id 7 when findProperty is executed") {
-    val fixture = new TestConfiguration
+  val testError2: Spec[Any, Option[Property]] = test("fails with ServiceException when outcome is set to timeout error") {
+    val fixture = new TestConfiguration {
+      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseTimeoutError
+    }
 
     for {
       propertyService <- fixture.propertyServiceUIO
-      property        <- propertyService.findProperty(7)
-    } yield assertProperty(userId = 3, propertyId = 7, value = property)
+      error           <- propertyService.findProperty(1).flip
+    } yield assert(error)(isSubtype[ServiceException](anything))
   }
 
-  val test4: Spec[Any, ServiceException] = test("returns the properties of Alonzo Church when findPropertiesOfUser is executed") {
-    val fixture = new TestConfiguration
+  val testError3: Spec[Any, Option[Property]] = test("fails with ServiceException when outcome is set to connection error") {
+    val fixture = new TestConfiguration {
+      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseConnectionClosedError
+    }
 
     for {
       propertyService <- fixture.propertyServiceUIO
-      properties      <- propertyService.findPropertiesOfUser(1)
-    } yield assertProperties(userId = 1, propertyIds = List(1, 2, 3), value = properties)
+      error           <- propertyService.findProperty(1).flip
+    } yield assert(error)(isSubtype[ServiceException](anything))
   }
 
-  val test5: Spec[Any, ServiceException] = test("returns the properties of Haskell Curry when findPropertiesOfUser is executed") {
-    val fixture = new TestConfiguration
-
-    for {
-      propertyService <- fixture.propertyServiceUIO
-      properties      <- propertyService.findPropertiesOfUser(3)
-    } yield assertProperties(userId = 3, propertyIds = List(7, 8), value = properties)
-  }
-
-  def spec: Spec[TestEnvironment with Scope, Any] = suite("Property service")(test1, test2, test3, test4, test5)
+  def spec: Spec[TestEnvironment with Scope, Any] = suite("Property service")(test1, test2, test3, test4, testError1, testError2, testError3)
 
   private def assertProperty(userId: Int, propertyId: Int, value: Option[Property]): TestResult = {
     val maybePropertyRecord: Option[PropertyRecord] = DatabaseImpl.propertiesById.get(propertyId)

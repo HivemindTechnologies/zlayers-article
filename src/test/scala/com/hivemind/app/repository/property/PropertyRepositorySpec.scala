@@ -22,7 +22,34 @@ object UserRepositorySpec extends ZIOSpecDefault {
     } yield assertAlonzoChurchCar(property)
   }
 
-  val test2: Spec[Any, Option[Property]] = test("returns an exception when getPropertyById is executed (if probability of errors is 100%)") {
+  val test2: Spec[Any, RepositoryException] = test("returns Alan Turing when getPropertyById is executed") {
+    val fixture = new TestConfiguration
+
+    for {
+      propertyRepository <- fixture.repositoryUIO
+      user               <- propertyRepository.getPropertyById(4)
+    } yield assertAlanTuringHouse(user)
+  }
+
+  val test3: Spec[Any, RepositoryException] = test("returns all properties of Alan Turing when getPropertyByOwnerId is executed") {
+    val fixture = new TestConfiguration
+
+    for {
+      propertyRepository <- fixture.repositoryUIO
+      properties         <- propertyRepository.getPropertiesByOwnerId(2)
+    } yield assertAllPropertiesOfAlanTuring(properties)
+  }
+
+  val test4: Spec[Any, RepositoryException] = test("returns all properties of Haskell Curry when getPropertyByOwnerId is executed") {
+    val fixture = new TestConfiguration
+
+    for {
+      propertyRepository <- fixture.repositoryUIO
+      properties         <- propertyRepository.getPropertiesByOwnerId(3)
+    } yield assertAllPropertiesOfHaskellCurry(properties)
+  }
+
+  val testError1: Spec[Any, Option[Property]] = test("fails with RepositoryException when outcome is set to query error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseQueryExecutionError
     }
@@ -33,34 +60,29 @@ object UserRepositorySpec extends ZIOSpecDefault {
     } yield assert(error)(isSubtype[RepositoryException](anything))
   }
 
-  val test3: Spec[Any, RepositoryException] = test("returns Alan Turing when getPropertyById is executed") {
-    val fixture = new TestConfiguration
+  val testError2: Spec[Any, Option[Property]] = test("fails with RepositoryException when outcome is set to connection error") {
+    val fixture = new TestConfiguration {
+      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseConnectionClosedError
+    }
 
     for {
       propertyRepository <- fixture.repositoryUIO
-      user               <- propertyRepository.getPropertyById(4)
-    } yield assertAlanTuringHouse(user)
+      error              <- propertyRepository.getPropertyById(1).flip
+    } yield assert(error)(isSubtype[RepositoryException](anything))
   }
 
-  val test4: Spec[Any, RepositoryException] = test("returns all properties of Alan Turing when getPropertyByOwnerId is executed") {
-    val fixture = new TestConfiguration
+  val testError3: Spec[Any, Option[Property]] = test("fails with RepositoryException when outcome is set to timeout error") {
+    val fixture = new TestConfiguration {
+      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseTimeoutError
+    }
 
     for {
       propertyRepository <- fixture.repositoryUIO
-      properties         <- propertyRepository.getPropertiesByOwnerId(2)
-    } yield assertAllPropertiesOfAlanTuring(properties)
+      error              <- propertyRepository.getPropertyById(1).flip
+    } yield assert(error)(isSubtype[RepositoryException](anything))
   }
 
-  val test5: Spec[Any, RepositoryException] = test("returns all properties of Haskell Curry when getPropertyByOwnerId is executed") {
-    val fixture = new TestConfiguration
-
-    for {
-      propertyRepository <- fixture.repositoryUIO
-      properties         <- propertyRepository.getPropertiesByOwnerId(3)
-    } yield assertAllPropertiesOfHaskellCurry(properties)
-  }
-
-  def spec: Spec[TestEnvironment with Scope, Any] = suite("Property repository")(test1, test2, test3, test4, test5)
+  def spec: Spec[TestEnvironment with Scope, Any] = suite("Property repository")(test1, test2, test3, test4, testError1, testError2, testError3)
 
   private def assertAlonzoChurchCar(value: Option[Property]): TestResult = {
     val maybePropertyRecord: Option[PropertyRecord] = DatabaseImpl.propertiesById.get(1)

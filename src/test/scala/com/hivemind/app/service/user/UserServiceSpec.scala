@@ -23,7 +23,16 @@ object UserServiceSpec extends ZIOSpecDefault {
     } yield assertAlonzoChurch(user)
   }
 
-  val test2: Spec[Any, Option[User]] = test("returns an exception when findUser is executed (if probability of errors is 100%)") {
+  val test2: Spec[Any, ServiceException] = test("returns Alan Turing when findUser is executed") {
+    val fixture = new TestConfiguration
+
+    for {
+      userService <- fixture.userServiceUIO
+      user        <- userService.findUser(2)
+    } yield assertAlanTuring(user)
+  }
+
+  val testError1: Spec[Any, Option[User]] = test("fails with ServiceException when outcome is set to query error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseQueryExecutionError
     }
@@ -34,15 +43,29 @@ object UserServiceSpec extends ZIOSpecDefault {
     } yield assert(error)(isSubtype[ServiceException](anything))
   }
 
-  val test3: Spec[Any, ServiceException]          = test("returns Alan Turing when findUser is executed") {
-    val fixture = new TestConfiguration
+  val testError2: Spec[Any, Option[User]] = test("fails with ServiceException when outcome is set to timeout error") {
+    val fixture = new TestConfiguration {
+      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseTimeoutError
+    }
 
     for {
       userService <- fixture.userServiceUIO
-      user        <- userService.findUser(2)
-    } yield assertAlanTuring(user)
+      error       <- userService.findUser(1).flip
+    } yield assert(error)(isSubtype[ServiceException](anything))
   }
-  def spec: Spec[TestEnvironment with Scope, Any] = suite("User service")(test1, test2, test3)
+
+  val testError3: Spec[Any, Option[User]] = test("fails with ServiceException when outcome is set to connection error") {
+    val fixture = new TestConfiguration {
+      override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseConnectionClosedError
+    }
+
+    for {
+      userService <- fixture.userServiceUIO
+      error       <- userService.findUser(1).flip
+    } yield assert(error)(isSubtype[ServiceException](anything))
+  }
+
+  def spec: Spec[TestEnvironment with Scope, Any] = suite("User service")(test1, test2, testError1, testError2, testError3)
 
   private def assertAlonzoChurch(value: Option[User]): TestResult = {
     val record: UserRecord       = DatabaseImpl.alonzoChurch
