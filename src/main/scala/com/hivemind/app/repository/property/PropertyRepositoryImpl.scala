@@ -20,14 +20,12 @@ class PropertyRepositoryImpl(database: Database, logger: Logger) extends Propert
     } yield buildPropertyFromRecord(maybePropertyRecord, maybeUserRecord)
 
   private def getUserOfProperty(maybePropertyRecord: Option[PropertyRecord]): IO[RepositoryException, Option[UserRecord]] = {
-    val emptyUserRecordZIO = ZIO.succeed(Option.empty[UserRecord])
+    val emptyUserRecord = Option.empty[UserRecord]
 
-    maybePropertyRecord.fold(emptyUserRecordZIO) { (propertyRecord: PropertyRecord) =>
+    maybePropertyRecord.fold(ZIO.succeed(emptyUserRecord)) { (propertyRecord: PropertyRecord) =>
       for {
-        maybeRecord     <- handleDatabaseErrors(database.getObjectById(propertyRecord.owner, TableName.Users), logger)
-        maybeUserRecord <- maybeRecord.fold(emptyUserRecordZIO)((record: Record) => ZIO.succeed(record.toUserRecord))
-        userRecord      <- maybeUserRecord.fold(emptyUserRecordZIO)((userRecord: UserRecord) => ZIO.succeed(userRecord))
-      } yield maybeUserRecord
+        maybeRecord <- handleDatabaseErrors(database.getObjectById(propertyRecord.owner, TableName.Users), logger)
+      } yield maybeRecord.fold(emptyUserRecord)(_.toUserRecord)
     }
   }
 
