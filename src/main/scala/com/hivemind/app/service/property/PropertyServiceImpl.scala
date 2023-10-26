@@ -2,11 +2,10 @@ package com.hivemind.app.service.property
 
 import com.hivemind.app.logging.Logger
 import com.hivemind.app.model.Property
-import com.hivemind.app.repository.exception.{RepositoryConnectionError, RepositoryException}
 import com.hivemind.app.repository.property.PropertyRepository
+import com.hivemind.app.service.exception.ServiceException
 import com.hivemind.app.service.exception.ServiceException.handleRepositoryErrors
-import com.hivemind.app.service.exception.{ServiceConnectionError, ServiceException}
-import zio.{IO, ZIO}
+import zio.IO
 
 class PropertyServiceImpl(propertyRepository: PropertyRepository, logger: Logger) extends PropertyService {
   override def findPropertiesOfUser(userId: Int): IO[ServiceException, Set[Property]] =

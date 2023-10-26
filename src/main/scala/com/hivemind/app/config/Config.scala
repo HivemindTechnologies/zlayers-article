@@ -1,6 +1,6 @@
 package com.hivemind.app.config
 
-import com.hivemind.app.database.exception.{DatabaseException, DatabaseLayerExecutionOutcome}
+import com.hivemind.app.database.exception.DatabaseLayerExecutionOutcome
 import zio.{ULayer, ZLayer}
 
 case class Config(databaseParameters: DatabaseParameters)
