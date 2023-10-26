@@ -1,7 +1,12 @@
 package com.hivemind.app.database
 
 import com.hivemind.app.config.Config
-import com.hivemind.app.database.exception.{DatabaseConnectionClosedException, DatabaseException, DatabaseLayerExecutionOutcome, DatabaseQueryExecutionException}
+import com.hivemind.app.database.exception.{
+  DatabaseConnectionClosedException,
+  DatabaseException,
+  DatabaseLayerExecutionOutcome,
+  DatabaseQueryExecutionException,
+}
 import com.hivemind.app.database.model.{Record, TableName}
 import com.hivemind.app.logging.Logger
 import zio.*
