@@ -10,40 +10,36 @@ This is the main structure of the application in 4 layers, application, service,
 ```mermaid
 %%{init: {"flowchart": {"htmlLabels": false}} }%%
 flowchart TB
-subgraph appLayer["Application Layer"]
-    direction LR
-    app["Application"]
-    appConfig["App Config"]
-    appLogger["App Logger"]
-end
+    subgraph appLayer["Application Layer"]
+        direction LR
+        app["Application"]
+        appConfig["App Config"]
+        appLogger["App Logger"]
+    end
 
-subgraph serviceLayer["Service Layer"]
-    propService["Property Service"]
-    userService["User Service"]
-end
+    subgraph serviceLayer["Service Layer"]
+        propService["Property Service"]
+        userService["User Service"]
+    end
 
-subgraph repoLayer["Repository Layer"]
-    userRepo["User Repository"]
-    propRepo["Property Repository"]
-end
+    subgraph repoLayer["Repository Layer"]
+        userRepo["User Repository"]
+        propRepo["Property Repository"]
+    end
 
-subgraph dbLayer["Database Layer"]
-    database["Database"]
-    db[(Database)]
-    dbConfig["Database Config"]
-    dbLogger["DB Logger"]
-end
+    subgraph dbLayer["Database Layer"]
+        database["Database"]
+        db[(Database)]
+        dbConfig["Database Config"]
+        dbLogger["DB Logger"]
+    end
 
-app -. "findUser()" .-> userService -. "getUserById()" .-> userRepo -. "getObjectById()" .-> database -. "SQL query" .-> db
-
-app -. "findProperty()" .-> propService -. "getPropertyById()" .-> propRepo -. "getObjectById()" .-> database
-
-app -. "findPropertiesOfUser()" .-> propService -. "getPropertiesByOwnerId()" .-> propRepo
-
-database -. "uses" .-> dbLogger
-database -. "uses" .-> dbConfig
+    app -. " findUser() " .-> userService -. " getUserById() " .-> userRepo -. " getObjectById() " .-> database -. " SQL query " .-> db
+    app -. " findProperty() " .-> propService -. " getPropertyById() " .-> propRepo -. " getObjectById() " .-> database
+    app -. " findPropertiesOfUser() " .-> propService -. " getPropertiesByOwnerId() " .-> propRepo -. " getAllRecords() " .-> database
+    database -. " uses " .-> dbLogger
+    database -. " uses " .-> dbConfig
 ```
-
 
 ## Provided SBT commands
 
