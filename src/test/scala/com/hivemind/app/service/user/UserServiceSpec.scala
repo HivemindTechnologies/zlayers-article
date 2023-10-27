@@ -14,53 +14,53 @@ import zio.test.Assertion.{anything, equalTo, isSubtype}
 
 object UserServiceSpec extends ZIOSpecDefault {
 
-  val test1: Spec[Any, ServiceException] = test("returns Alonzo Church when findUser is executed") {
+  val test1: Spec[Scope, ServiceException] = test("returns Alonzo Church when findUser is executed") {
     val fixture = new TestConfiguration
 
     for {
-      userService <- fixture.userServiceUIO
+      userService <- fixture.userServiceURIO
       user        <- userService.findUser(1)
     } yield assertAlonzoChurch(user)
   }
 
-  val test2: Spec[Any, ServiceException] = test("returns Alan Turing when findUser is executed") {
+  val test2: Spec[Scope, ServiceException] = test("returns Alan Turing when findUser is executed") {
     val fixture = new TestConfiguration
 
     for {
-      userService <- fixture.userServiceUIO
+      userService <- fixture.userServiceURIO
       user        <- userService.findUser(2)
     } yield assertAlanTuring(user)
   }
 
-  val testError1: Spec[Any, Option[User]] = test("fails with ServiceException when outcome is set to query error") {
+  val testError1: Spec[Scope, Option[User]] = test("fails with ServiceException when outcome is set to query error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseQueryExecutionError
     }
 
     for {
-      userService <- fixture.userServiceUIO
+      userService <- fixture.userServiceURIO
       error       <- userService.findUser(1).flip
     } yield assert(error)(isSubtype[ServiceException](anything))
   }
 
-  val testError2: Spec[Any, Option[User]] = test("fails with ServiceException when outcome is set to timeout error") {
+  val testError2: Spec[Scope, Option[User]] = test("fails with ServiceException when outcome is set to timeout error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseTimeoutError
     }
 
     for {
-      userService <- fixture.userServiceUIO
+      userService <- fixture.userServiceURIO
       error       <- userService.findUser(1).flip
     } yield assert(error)(isSubtype[ServiceException](anything))
   }
 
-  val testError3: Spec[Any, Option[User]] = test("fails with ServiceException when outcome is set to connection error") {
+  val testError3: Spec[Scope, Option[User]] = test("fails with ServiceException when outcome is set to connection error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseConnectionClosedError
     }
 
     for {
-      userService <- fixture.userServiceUIO
+      userService <- fixture.userServiceURIO
       error       <- userService.findUser(1).flip
     } yield assert(error)(isSubtype[ServiceException](anything))
   }
@@ -88,8 +88,7 @@ class TestConfiguration {
   lazy val testConfig: Config                         = Config.testConfig(outcome = outcome)
   val testConfigZLayer: ULayer[Config]                = ZLayer.succeed(testConfig)
   val consoleZLayer: ULayer[Console.ConsoleLive.type] = ZLayer.succeed(zio.Console.ConsoleLive)
-  val userServiceURIO: URIO[UserService, UserService] = ZIO.service[UserService]
 
-  val userServiceUIO: UIO[UserService] =
-    userServiceURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, UserRepository.live, UserService.live)
+  val userServiceURIO: URIO[Scope, UserService] =
+    ZIO.service[UserService].provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, UserRepository.live, UserService.live)
 }

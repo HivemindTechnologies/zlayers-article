@@ -11,7 +11,7 @@ val ZIOVersion       = "2.0.18"
 val ScalaTestVersion = "3.2.17"
 
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
-addCommandAlias("check", "all compile Test/compile IntegrationTest/compile")
+addCommandAlias("check", "clean; fmt; all compile Test/compile IntegrationTest/compile; test")
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 

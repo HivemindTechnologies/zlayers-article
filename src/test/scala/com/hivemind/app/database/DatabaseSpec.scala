@@ -14,7 +14,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      db     <- fixture.databaseUIO
+      db     <- fixture.databaseURIO
       record <- db.getObjectById(1, TableName.Users)
     } yield assertAlonzoChurch(record)
   }
@@ -23,7 +23,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      db     <- fixture.databaseUIO
+      db     <- fixture.databaseURIO
       record <- db.getObjectById(2, TableName.Users)
     } yield assertAlanTuring(record)
   }
@@ -32,7 +32,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      db     <- fixture.databaseUIO
+      db     <- fixture.databaseURIO
       record <- db.getObjectById(1, TableName.Properties)
     } yield assertProperty1(record)
   }
@@ -41,7 +41,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      db     <- fixture.databaseUIO
+      db     <- fixture.databaseURIO
       record <- db.getObjectById(2, TableName.Properties)
     } yield assertProperty2(record)
   }
@@ -50,7 +50,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      db            <- fixture.databaseUIO
+      db            <- fixture.databaseURIO
       listOfRecords <- db.getAllRecords(TableName.Users)
     } yield assertListOfUsers(listOfRecords)
   }
@@ -59,7 +59,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     val fixture = new TestConfiguration
 
     for {
-      db            <- fixture.databaseUIO
+      db            <- fixture.databaseURIO
       listOfRecords <- db.getAllRecords(TableName.Properties)
     } yield assert(listOfRecords)(hasSize(equalTo(8)))
   }
@@ -70,7 +70,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     }
 
     for {
-      db    <- fixture.databaseUIO
+      db    <- fixture.databaseURIO
       error <- db.getObjectById(1, TableName.Users).flip
     } yield assert(error)(isSubtype[DatabaseConnectionClosedException](anything))
   }
@@ -81,7 +81,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     }
 
     for {
-      db    <- fixture.databaseUIO
+      db    <- fixture.databaseURIO
       error <- db.getObjectById(1, TableName.Users).flip
     } yield assert(error)(isSubtype[DatabaseQueryExecutionException](anything))
   }
@@ -92,7 +92,7 @@ object DatabaseSpec extends ZIOSpecDefault {
     }
 
     for {
-      db    <- fixture.databaseUIO
+      db    <- fixture.databaseURIO
       error <- db.getObjectById(1, TableName.Users).flip
     } yield assert(error)(isSubtype[DatabaseTimeoutException](anything))
   }
@@ -124,10 +124,10 @@ class TestConfiguration {
   lazy val testConfig: Config                     = Config.testConfig(outcome = outcome)
   val testConfigZLayer: ULayer[Config]            = ZLayer.succeed(testConfig)
   val consoleZLayer: ULayer[Console]              = ZLayer.succeed(Console.ConsoleLive)
-  val dbTestURIO: URIO[Database, Database]        = ZIO.service[Database]
+  val dbServiceURIO: URIO[Database, Database]     = ZIO.service[Database]
 
-  val databaseUIO: URIO[Scope, Database] =
-    dbTestURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live)
-    // To use the counter logger implementation, uncomment the next line:
+  val databaseURIO: URIO[Scope, Database] =
+    dbServiceURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live)
+    // To use the counter logger implementation, uncomment the next line (and comment the previous one):
     // dbTestURIO.provideSome[Scope](consoleZLayer, testConfigZLayer, Logger.liveWithLineCounter, Database.live)
 }

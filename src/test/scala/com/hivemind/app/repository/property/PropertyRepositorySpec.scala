@@ -13,71 +13,71 @@ import zio.test.Assertion.*
 
 object UserRepositorySpec extends ZIOSpecDefault {
 
-  val test1: Spec[Any, RepositoryException] = test("returns Alonzo Church when getPropertyById is executed") {
+  val test1: Spec[Scope, RepositoryException] = test("returns Alonzo Church when getPropertyById is executed") {
     val fixture = new TestConfiguration
 
     for {
-      propertyRepository <- fixture.repositoryUIO
+      propertyRepository <- fixture.repositoryURIO
       property           <- propertyRepository.getPropertyById(1)
     } yield assertAlonzoChurchCar(property)
   }
 
-  val test2: Spec[Any, RepositoryException] = test("returns Alan Turing when getPropertyById is executed") {
+  val test2: Spec[Scope, RepositoryException] = test("returns Alan Turing when getPropertyById is executed") {
     val fixture = new TestConfiguration
 
     for {
-      propertyRepository <- fixture.repositoryUIO
+      propertyRepository <- fixture.repositoryURIO
       user               <- propertyRepository.getPropertyById(4)
     } yield assertAlanTuringHouse(user)
   }
 
-  val test3: Spec[Any, RepositoryException] = test("returns all properties of Alan Turing when getPropertyByOwnerId is executed") {
+  val test3: Spec[Scope, RepositoryException] = test("returns all properties of Alan Turing when getPropertyByOwnerId is executed") {
     val fixture = new TestConfiguration
 
     for {
-      propertyRepository <- fixture.repositoryUIO
+      propertyRepository <- fixture.repositoryURIO
       properties         <- propertyRepository.getPropertiesByOwnerId(2)
     } yield assertAllPropertiesOfAlanTuring(properties)
   }
 
-  val test4: Spec[Any, RepositoryException] = test("returns all properties of Haskell Curry when getPropertyByOwnerId is executed") {
+  val test4: Spec[Scope, RepositoryException] = test("returns all properties of Haskell Curry when getPropertyByOwnerId is executed") {
     val fixture = new TestConfiguration
 
     for {
-      propertyRepository <- fixture.repositoryUIO
+      propertyRepository <- fixture.repositoryURIO
       properties         <- propertyRepository.getPropertiesByOwnerId(3)
     } yield assertAllPropertiesOfHaskellCurry(properties)
   }
 
-  val testError1: Spec[Any, Option[Property]] = test("fails with RepositoryException when outcome is set to query error") {
+  val testError1: Spec[Scope, Option[Property]] = test("fails with RepositoryException when outcome is set to query error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseQueryExecutionError
     }
 
     for {
-      propertyRepository <- fixture.repositoryUIO
+      propertyRepository <- fixture.repositoryURIO
       error              <- propertyRepository.getPropertyById(1).flip
     } yield assert(error)(isSubtype[RepositoryException](anything))
   }
 
-  val testError2: Spec[Any, Option[Property]] = test("fails with RepositoryException when outcome is set to connection error") {
+  val testError2: Spec[Scope, Option[Property]] = test("fails with RepositoryException when outcome is set to connection error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseConnectionClosedError
     }
 
     for {
-      propertyRepository <- fixture.repositoryUIO
+      propertyRepository <- fixture.repositoryURIO
       error              <- propertyRepository.getPropertyById(1).flip
     } yield assert(error)(isSubtype[RepositoryException](anything))
   }
 
-  val testError3: Spec[Any, Option[Property]] = test("fails with RepositoryException when outcome is set to timeout error") {
+  val testError3: Spec[Scope, Option[Property]] = test("fails with RepositoryException when outcome is set to timeout error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseTimeoutError
     }
 
     for {
-      propertyRepository <- fixture.repositoryUIO
+      propertyRepository <- fixture.repositoryURIO
       error              <- propertyRepository.getPropertyById(1).flip
     } yield assert(error)(isSubtype[RepositoryException](anything))
   }
@@ -153,12 +153,11 @@ object UserRepositorySpec extends ZIOSpecDefault {
 }
 
 class TestConfiguration {
-  lazy val outcome: DatabaseLayerExecutionOutcome                      = DatabaseLayerExecutionOutcome.FinishWithoutErrors
-  lazy val testConfig: Config                                          = Config.testConfig(outcome = outcome)
-  val testConfigZLayer: ULayer[Config]                                 = ZLayer.succeed(testConfig)
-  val consoleZLayer: ULayer[Console.ConsoleLive.type]                  = ZLayer.succeed(zio.Console.ConsoleLive)
-  val userRepositoryURIO: URIO[PropertyRepository, PropertyRepository] = ZIO.service[PropertyRepository]
+  lazy val outcome: DatabaseLayerExecutionOutcome     = DatabaseLayerExecutionOutcome.FinishWithoutErrors
+  lazy val testConfig: Config                         = Config.testConfig(outcome = outcome)
+  val testConfigZLayer: ULayer[Config]                = ZLayer.succeed(testConfig)
+  val consoleZLayer: ULayer[Console.ConsoleLive.type] = ZLayer.succeed(zio.Console.ConsoleLive)
 
-  val repositoryUIO: UIO[PropertyRepository] =
-    userRepositoryURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, PropertyRepository.live)
+  val repositoryURIO: URIO[Scope, PropertyRepository] =
+    ZIO.service[PropertyRepository].provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, PropertyRepository.live)
 }

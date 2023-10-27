@@ -13,53 +13,53 @@ import zio.test.Assertion.*
 
 object UserRepositorySpec extends ZIOSpecDefault {
 
-  val test1: Spec[Any, RepositoryException] = test("returns Alonzo Church when getUserById is executed") {
+  val test1: Spec[Scope, RepositoryException] = test("returns Alonzo Church when getUserById is executed") {
     val fixture = new TestConfiguration
 
     for {
-      userRepository <- fixture.repositoryUIO
+      userRepository <- fixture.repositoryURIO
       user           <- userRepository.getUserById(1)
     } yield assertAlonzoChurch(user)
   }
 
-  val test2: Spec[Any, RepositoryException] = test("returns Alan Turing when getUserById is executed") {
+  val test2: Spec[Scope, RepositoryException] = test("returns Alan Turing when getUserById is executed") {
     val fixture = new TestConfiguration
 
     for {
-      userRepository <- fixture.repositoryUIO
+      userRepository <- fixture.repositoryURIO
       user           <- userRepository.getUserById(2)
     } yield assertAlanTuring(user)
   }
 
-  val testError1: Spec[Any, Option[User]] = test("fails with RepositoryException when outcome is set to query error") {
+  val testError1: Spec[Scope, Option[User]] = test("fails with RepositoryException when outcome is set to query error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseQueryExecutionError
     }
 
     for {
-      userRepository <- fixture.repositoryUIO
+      userRepository <- fixture.repositoryURIO
       error          <- userRepository.getUserById(1).flip
     } yield assert(error)(isSubtype[RepositoryException](anything))
   }
 
-  val testError2: Spec[Any, Option[User]] = test("fails with RepositoryException when outcome is set to connection error") {
+  val testError2: Spec[Scope, Option[User]] = test("fails with RepositoryException when outcome is set to connection error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseConnectionClosedError
     }
 
     for {
-      userRepository <- fixture.repositoryUIO
+      userRepository <- fixture.repositoryURIO
       error          <- userRepository.getUserById(1).flip
     } yield assert(error)(isSubtype[RepositoryException](anything))
   }
 
-  val testError3: Spec[Any, Option[User]] = test("fails with RepositoryException when outcome is set to timeout error") {
+  val testError3: Spec[Scope, Option[User]] = test("fails with RepositoryException when outcome is set to timeout error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseTimeoutError
     }
 
     for {
-      userRepository <- fixture.repositoryUIO
+      userRepository <- fixture.repositoryURIO
       error          <- userRepository.getUserById(1).flip
     } yield assert(error)(isSubtype[RepositoryException](anything))
   }
@@ -82,12 +82,11 @@ object UserRepositorySpec extends ZIOSpecDefault {
 }
 
 class TestConfiguration {
-  lazy val outcome: DatabaseLayerExecutionOutcome              = DatabaseLayerExecutionOutcome.FinishWithoutErrors
-  lazy val testConfig: Config                                  = Config.testConfig(outcome = outcome)
-  val testConfigZLayer: ULayer[Config]                         = ZLayer.succeed(testConfig)
-  val consoleZLayer: ULayer[Console.ConsoleLive.type]          = ZLayer.succeed(zio.Console.ConsoleLive)
-  val userRepositoryURIO: URIO[UserRepository, UserRepository] = ZIO.service[UserRepository]
+  lazy val outcome: DatabaseLayerExecutionOutcome     = DatabaseLayerExecutionOutcome.FinishWithoutErrors
+  lazy val testConfig: Config                         = Config.testConfig(outcome = outcome)
+  val testConfigZLayer: ULayer[Config]                = ZLayer.succeed(testConfig)
+  val consoleZLayer: ULayer[Console.ConsoleLive.type] = ZLayer.succeed(zio.Console.ConsoleLive)
 
-  val repositoryUIO: UIO[UserRepository] =
-    userRepositoryURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, UserRepository.live)
+  val repositoryURIO: URIO[Scope, UserRepository] =
+    ZIO.service[UserRepository].provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, UserRepository.live)
 }

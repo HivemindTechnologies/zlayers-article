@@ -14,71 +14,71 @@ import zio.test.Assertion.{anything, equalTo, isSubtype}
 
 object PropertyServiceSpec extends ZIOSpecDefault {
 
-  val test1: Spec[Any, ServiceException] = test("returns the property with id 1 when findProperty is executed") {
+  val test1: Spec[Scope, ServiceException] = test("returns the property with id 1 when findProperty is executed") {
     val fixture = new TestConfiguration
 
     for {
-      propertyService <- fixture.propertyServiceUIO
+      propertyService <- fixture.propertyServiceURIO
       property        <- propertyService.findProperty(1)
     } yield assertProperty(userId = 1, propertyId = 1, value = property)
   }
 
-  val test2: Spec[Any, ServiceException] = test("returns the property with id 7 when findProperty is executed") {
+  val test2: Spec[Scope, ServiceException] = test("returns the property with id 7 when findProperty is executed") {
     val fixture = new TestConfiguration
 
     for {
-      propertyService <- fixture.propertyServiceUIO
+      propertyService <- fixture.propertyServiceURIO
       property        <- propertyService.findProperty(7)
     } yield assertProperty(userId = 3, propertyId = 7, value = property)
   }
 
-  val test3: Spec[Any, ServiceException] = test("returns the properties of Alonzo Church when findPropertiesOfUser is executed") {
+  val test3: Spec[Scope, ServiceException] = test("returns the properties of Alonzo Church when findPropertiesOfUser is executed") {
     val fixture = new TestConfiguration
 
     for {
-      propertyService <- fixture.propertyServiceUIO
+      propertyService <- fixture.propertyServiceURIO
       properties      <- propertyService.findPropertiesOfUser(1)
     } yield assertProperties(userId = 1, propertyIds = List(1, 2, 3), value = properties)
   }
 
-  val test4: Spec[Any, ServiceException] = test("returns the properties of Haskell Curry when findPropertiesOfUser is executed") {
+  val test4: Spec[Scope, ServiceException] = test("returns the properties of Haskell Curry when findPropertiesOfUser is executed") {
     val fixture = new TestConfiguration
 
     for {
-      propertyService <- fixture.propertyServiceUIO
+      propertyService <- fixture.propertyServiceURIO
       properties      <- propertyService.findPropertiesOfUser(3)
     } yield assertProperties(userId = 3, propertyIds = List(7, 8), value = properties)
   }
 
-  val testError1: Spec[Any, Option[Property]] = test("fails with ServiceException when outcome is set to query error") {
+  val testError1: Spec[Scope, Option[Property]] = test("fails with ServiceException when outcome is set to query error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseQueryExecutionError
     }
 
     for {
-      propertyService <- fixture.propertyServiceUIO
+      propertyService <- fixture.propertyServiceURIO
       error           <- propertyService.findProperty(1).flip
     } yield assert(error)(isSubtype[ServiceException](anything))
   }
 
-  val testError2: Spec[Any, Option[Property]] = test("fails with ServiceException when outcome is set to timeout error") {
+  val testError2: Spec[Scope, Option[Property]] = test("fails with ServiceException when outcome is set to timeout error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseTimeoutError
     }
 
     for {
-      propertyService <- fixture.propertyServiceUIO
+      propertyService <- fixture.propertyServiceURIO
       error           <- propertyService.findProperty(1).flip
     } yield assert(error)(isSubtype[ServiceException](anything))
   }
 
-  val testError3: Spec[Any, Option[Property]] = test("fails with ServiceException when outcome is set to connection error") {
+  val testError3: Spec[Scope, Option[Property]] = test("fails with ServiceException when outcome is set to connection error") {
     val fixture = new TestConfiguration {
       override lazy val outcome: DatabaseLayerExecutionOutcome = DatabaseLayerExecutionOutcome.RaiseConnectionClosedError
     }
 
     for {
-      propertyService <- fixture.propertyServiceUIO
+      propertyService <- fixture.propertyServiceURIO
       error           <- propertyService.findProperty(1).flip
     } yield assert(error)(isSubtype[ServiceException](anything))
   }
@@ -106,12 +106,11 @@ object PropertyServiceSpec extends ZIOSpecDefault {
 }
 
 class TestConfiguration {
-  lazy val outcome: DatabaseLayerExecutionOutcome                 = DatabaseLayerExecutionOutcome.FinishWithoutErrors
-  lazy val testConfig: Config                                     = Config.testConfig(outcome = outcome)
-  val testConfigZLayer: ULayer[Config]                            = ZLayer.succeed(testConfig)
-  val consoleZLayer: ULayer[Console.ConsoleLive.type]             = ZLayer.succeed(zio.Console.ConsoleLive)
-  val propertyServiceURIO: URIO[PropertyService, PropertyService] = ZIO.service[PropertyService]
+  lazy val outcome: DatabaseLayerExecutionOutcome     = DatabaseLayerExecutionOutcome.FinishWithoutErrors
+  lazy val testConfig: Config                         = Config.testConfig(outcome = outcome)
+  val testConfigZLayer: ULayer[Config]                = ZLayer.succeed(testConfig)
+  val consoleZLayer: ULayer[Console.ConsoleLive.type] = ZLayer.succeed(zio.Console.ConsoleLive)
 
-  val propertyServiceUIO: UIO[PropertyService] =
-    propertyServiceURIO.provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, PropertyRepository.live, PropertyService.live)
+  val propertyServiceURIO: URIO[Scope, PropertyService] =
+    ZIO.service[PropertyService].provide(consoleZLayer, testConfigZLayer, Logger.live, Database.live, PropertyRepository.live, PropertyService.live)
 }
